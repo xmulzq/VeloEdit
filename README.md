@@ -35,7 +35,10 @@ VeloEdit/
 │   └── analyze.py         # Command-line analysis tool
 ├── output/                 # Output module
 │   └── exporters.py       # Result export
-└── benchmark_infer.py      # Benchmark script
+|── benchmark_intervention_flux.py
+|── benchmark_intervention_flux.sh      # Benchmark script
+|── benchmark_intervention_qwen.py
+└── benchmark_intervention_qwen.sh      # Benchmark script
 ```
 
 ## Installation
