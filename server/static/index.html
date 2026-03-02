@@ -1,0 +1,3249 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Velocity Field Analyzer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+      :root {
+        --primary: #6366f1;
+        --primary-light: #818cf8;
+        --primary-dark: #4f46e5;
+        --secondary: #3b82f6;
+        --accent: #f97316;
+        --success: #10b981;
+        --danger: #ef4444;
+        --preserve-color: #22c55e;
+        --edit-color: #f59e0b;
+        --bg-dark: #0a0e1a;
+        --bg-card: rgba(255, 255, 255, 0.03);
+        --border: rgba(255, 255, 255, 0.08);
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --text-muted: #64748b;
+        --glass-bg: rgba(255, 255, 255, 0.05);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        --radius: 16px;
+        --radius-sm: 10px;
+        --transition: 0.2s ease-out;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          "DM Sans",
+          -apple-system,
+          BlinkMacSystemFont,
+          "PingFang SC",
+          "Microsoft YaHei",
+          sans-serif;
+        background: var(--bg-dark);
+        background-image:
+          radial-gradient(
+            ellipse at 20% 20%,
+            rgba(99, 102, 241, 0.08) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            ellipse at 80% 80%,
+            rgba(59, 130, 246, 0.06) 0%,
+            transparent 50%
+          );
+        min-height: 100vh;
+        color: var(--text-primary);
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      header {
+        text-align: center;
+        padding: 40px 0 32px;
+      }
+
+      header h1 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(
+          135deg,
+          var(--primary-light),
+          var(--secondary),
+          var(--accent)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 12px;
+      }
+
+      header p {
+        color: var(--text-secondary);
+        font-size: 1.05rem;
+      }
+
+      .main-grid {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        gap: 28px;
+        margin-top: 20px;
+      }
+
+      .panel {
+        background: var(--glass-bg);
+        border-radius: var(--radius);
+        padding: 28px;
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--shadow);
+      }
+
+      .panel h2 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.15rem;
+        font-weight: 600;
+        margin-bottom: 24px;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .panel h2::before {
+        content: "";
+        width: 4px;
+        height: 20px;
+        background: linear-gradient(180deg, var(--primary), var(--secondary));
+        border-radius: 2px;
+      }
+
+      /* Upload Zone */
+      .upload-zone {
+        border: 2px dashed var(--border);
+        border-radius: var(--radius);
+        padding: 48px 24px;
+        text-align: center;
+        cursor: pointer;
+        transition: all var(--transition);
+        margin-bottom: 24px;
+      }
+
+      .upload-zone:hover {
+        border-color: var(--primary);
+        background: rgba(99, 102, 241, 0.05);
+      }
+
+      .upload-zone.has-image {
+        padding: 12px;
+        border-style: solid;
+      }
+
+      .upload-zone img {
+        max-width: 100%;
+        max-height: 220px;
+        border-radius: var(--radius-sm);
+        object-fit: contain;
+      }
+
+      .upload-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 16px;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .upload-icon svg {
+        width: 28px;
+        height: 28px;
+        stroke: white;
+      }
+
+      /* Form Controls */
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+      }
+
+      textarea,
+      select,
+      input[type="number"] {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        background: rgba(0, 0, 0, 0.3);
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 0.95rem;
+        margin-bottom: 20px;
+        transition: all var(--transition);
+      }
+
+      textarea:focus,
+      select:focus,
+      input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+      }
+
+      /* Model Buttons */
+      .model-select {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+
+      .model-btn {
+        flex: 1;
+        min-width: 90px;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        background: transparent;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all var(--transition);
+        font-family: inherit;
+        font-size: 0.85rem;
+        font-weight: 500;
+        white-space: nowrap;
+      }
+
+      .model-btn:hover:not(:disabled) {
+        border-color: var(--primary);
+        color: var(--text-primary);
+      }
+
+      .model-btn.active {
+        background: linear-gradient(
+          135deg,
+          var(--primary),
+          var(--primary-dark)
+        );
+        border-color: transparent;
+        color: white;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+      }
+
+      .model-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      /* Intervention Config */
+      .intervention-config {
+        margin-bottom: 20px;
+        padding: 16px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+      }
+
+      .intervention-config > label {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+      }
+
+      .config-note {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-bottom: 14px;
+        padding: 8px 10px;
+        background: rgba(99, 102, 241, 0.1);
+        border-radius: 6px;
+        border-left: 3px solid var(--primary);
+      }
+
+      .config-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+
+      .config-grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+
+      .config-item {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .config-item label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-bottom: 4px;
+      }
+
+      .config-item input[type="number"] {
+        padding: 10px 12px;
+        margin-bottom: 0;
+        text-align: center;
+        font-size: 0.9rem;
+      }
+
+      .config-hint {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 10px;
+        font-style: italic;
+      }
+
+      /* Toggle Switch */
+      .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 48px;
+        height: 26px;
+        flex-shrink: 0;
+      }
+
+      .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        position: absolute;
+      }
+
+      .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255, 255, 255, 0.1);
+        transition: 0.3s;
+        border-radius: 26px;
+        border: 1px solid var(--border);
+      }
+
+      .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        left: 2px;
+        bottom: 2px;
+        background-color: var(--text-secondary);
+        transition: 0.3s;
+        border-radius: 50%;
+      }
+
+      .toggle-switch input:checked + .toggle-slider {
+        background: linear-gradient(
+          135deg,
+          var(--primary),
+          var(--primary-dark)
+        );
+        border-color: transparent;
+      }
+
+      .toggle-switch input:checked + .toggle-slider:before {
+        transform: translateX(22px);
+        background-color: white;
+      }
+
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+
+      .toggle-row label {
+        margin-bottom: 0;
+        cursor: pointer;
+      }
+
+      /* Blend Slider */
+      .blend-slider {
+        width: 100%;
+        height: 8px;
+        -webkit-appearance: none;
+        appearance: none;
+        background: linear-gradient(
+          90deg,
+          var(--preserve-color),
+          var(--edit-color)
+        );
+        border-radius: 4px;
+        outline: none;
+        cursor: pointer;
+      }
+
+      .blend-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        background: white;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        transition: transform 0.2s;
+      }
+
+      .blend-slider::-webkit-slider-thumb:hover {
+        transform: scale(1.15);
+      }
+
+      .blend-slider::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        background: white;
+        border-radius: 50%;
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      }
+
+      /* Config Presets */
+      .config-presets {
+        margin-top: 20px;
+        margin-bottom: 20px;
+        padding: 16px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+      }
+
+      .preset-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+
+      .preset-header label {
+        margin-bottom: 0;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .add-preset-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border: 1px solid var(--primary);
+        border-radius: var(--radius-sm);
+        background: transparent;
+        color: var(--primary-light);
+        font-family: inherit;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all var(--transition);
+      }
+
+      .add-preset-btn:hover {
+        background: rgba(99, 102, 241, 0.15);
+      }
+
+      .preset-list {
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .preset-empty {
+        text-align: center;
+        padding: 20px;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+      }
+
+      .preset-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+        background: rgba(0, 0, 0, 0.25);
+        border-radius: 8px;
+        border: 1px solid var(--border);
+      }
+
+      .preset-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .preset-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .preset-name {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+      }
+
+      .preset-params {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .preset-delete-btn {
+        padding: 6px;
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all var(--transition);
+        flex-shrink: 0;
+      }
+
+      .preset-delete-btn:hover {
+        background: rgba(239, 68, 68, 0.2);
+        color: var(--danger);
+      }
+
+      /* Submit Button */
+      .submit-btn {
+        width: 100%;
+        padding: 16px;
+        border: none;
+        border-radius: var(--radius-sm);
+        background: linear-gradient(
+          135deg,
+          var(--primary),
+          var(--primary-dark)
+        );
+        color: white;
+        font-family: inherit;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--transition);
+        box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+      }
+
+      .submit-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+      }
+
+      .submit-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      /* Status Bar */
+      .status-bar {
+        margin-top: 24px;
+        padding: 14px 18px;
+        background: rgba(0, 0, 0, 0.25);
+        border-radius: var(--radius-sm);
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        border: 1px solid var(--border);
+      }
+
+      /* Results Panel */
+      .results-panel {
+        min-height: 600px;
+      }
+
+      .results-content {
+        display: none;
+      }
+
+      .results-content.active {
+        display: block;
+      }
+
+      /* Placeholder */
+      .placeholder {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-muted);
+      }
+
+      .placeholder-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 20px;
+        background: rgba(99, 102, 241, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .placeholder-icon svg {
+        width: 40px;
+        height: 40px;
+        stroke: var(--primary);
+      }
+
+      /* History Pagination */
+      .history-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+        padding: 12px 16px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+      }
+
+      .history-pagination .history-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .history-pagination .history-label {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+      }
+
+      .history-pagination .history-index {
+        font-family: "Space Grotesk", monospace;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--primary-light);
+        background: rgba(99, 102, 241, 0.15);
+        padding: 4px 12px;
+        border-radius: 6px;
+      }
+
+      .history-pagination .history-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .history-pagination .page-btn {
+        width: 36px;
+        height: 36px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: transparent;
+        color: var(--text-secondary);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all var(--transition);
+      }
+
+      .history-pagination .page-btn:hover:not(:disabled) {
+        border-color: var(--primary);
+        color: var(--primary-light);
+        background: rgba(99, 102, 241, 0.1);
+      }
+
+      .history-pagination .page-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+
+      .history-pagination .page-btn svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .history-pagination .save-btn {
+        padding: 8px 16px;
+        border: 1px solid var(--success);
+        border-radius: 8px;
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all var(--transition);
+      }
+
+      .history-pagination .save-btn:hover {
+        background: rgba(16, 185, 129, 0.2);
+      }
+
+      .history-pagination .save-btn svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .history-pagination .clear-btn {
+        padding: 8px 16px;
+        border: 1px solid var(--danger);
+        border-radius: 8px;
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all var(--transition);
+      }
+
+      .history-pagination .clear-btn:hover {
+        background: rgba(239, 68, 68, 0.2);
+      }
+
+      .history-pagination .clear-btn svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .history-meta {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-bottom: 16px;
+        padding: 8px 12px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 6px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .history-meta span {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      /* Summary Cards */
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 28px;
+      }
+
+      .summary-card {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: var(--radius-sm);
+        padding: 20px;
+        text-align: center;
+        border: 1px solid var(--border);
+        transition: all var(--transition);
+      }
+
+      .summary-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      }
+
+      .summary-card .value {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+
+      .summary-card .label {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+      }
+
+      .summary-card.preserve .value {
+        color: var(--preserve-color);
+      }
+
+      .summary-card.preserve:hover {
+        box-shadow: 0 4px 16px rgba(34, 197, 94, 0.15);
+      }
+
+      .summary-card.edit .value {
+        color: var(--edit-color);
+      }
+
+      .summary-card.edit:hover {
+        box-shadow: 0 4px 16px rgba(245, 158, 11, 0.15);
+      }
+
+      .summary-card.angle .value {
+        color: var(--secondary);
+      }
+
+      .summary-card.angle:hover {
+        box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
+      }
+
+      /* Charts */
+      .charts-section {
+        margin-bottom: 28px;
+      }
+
+      .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+      }
+
+      .chart-container {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: var(--radius-sm);
+        padding: 16px;
+        border: 1px solid var(--border);
+      }
+
+      .chart-container h3 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: var(--text-primary);
+      }
+
+      .chart-note {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-top: 12px;
+        padding: 10px 12px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: var(--radius-sm);
+        border-left: 3px solid var(--primary);
+        line-height: 1.5;
+      }
+
+      /* Step Images Section */
+      .step-images-section {
+        margin-bottom: 28px;
+      }
+
+      .step-slider-container {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: var(--radius-sm);
+        padding: 20px;
+        border: 1px solid var(--border);
+        margin-bottom: 16px;
+      }
+
+      .step-slider-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      .step-slider-header h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+      }
+
+      .step-indicator {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--primary-light);
+        background: rgba(99, 102, 241, 0.15);
+        padding: 6px 14px;
+        border-radius: 8px;
+      }
+
+      .step-slider {
+        width: 100%;
+        height: 8px;
+        -webkit-appearance: none;
+        appearance: none;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        outline: none;
+        cursor: pointer;
+      }
+
+      .step-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        background: linear-gradient(
+          135deg,
+          var(--primary),
+          var(--primary-dark)
+        );
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+        transition: transform 0.2s;
+      }
+
+      .step-slider::-webkit-slider-thumb:hover {
+        transform: scale(1.15);
+      }
+
+      .step-slider::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        background: linear-gradient(
+          135deg,
+          var(--primary),
+          var(--primary-dark)
+        );
+        border-radius: 50%;
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+      }
+
+      .step-image-display {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: var(--radius-sm);
+        padding: 16px;
+        border: 1px solid var(--border);
+        text-align: center;
+      }
+
+      .step-image-display h4 {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
+      }
+
+      .step-image-display img {
+        max-width: 100%;
+        max-height: 400px;
+        border-radius: var(--radius-sm);
+        object-fit: contain;
+      }
+
+      .step-info {
+        margin-top: 12px;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 6px;
+      }
+
+      /* Images Section */
+      .images-section {
+        margin-bottom: 28px;
+      }
+
+      .images-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+      }
+
+      .image-card {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: var(--radius-sm);
+        padding: 16px;
+        border: 1px solid var(--border);
+      }
+
+      .image-card h3 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: var(--text-secondary);
+      }
+
+      .image-card img {
+        width: 100%;
+        border-radius: var(--radius-sm);
+      }
+
+      /* Data Table */
+      .data-section {
+        margin-top: 28px;
+      }
+
+      .data-section h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 16px;
+        color: var(--text-primary);
+      }
+
+      .data-table-wrapper {
+        overflow-x: auto;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+      }
+
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+      }
+
+      .data-table th,
+      .data-table td {
+        padding: 12px 16px;
+        text-align: center;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .data-table th {
+        background: rgba(99, 102, 241, 0.1);
+        font-weight: 600;
+        color: var(--text-secondary);
+      }
+
+      .data-table td {
+        color: var(--text-primary);
+      }
+
+      .data-table tr:hover td {
+        background: rgba(99, 102, 241, 0.05);
+      }
+
+      /* Comparison Results Grid */
+      .comparison-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+        margin-bottom: 28px;
+      }
+
+      .comparison-card {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: var(--radius-sm);
+        padding: 16px;
+        border: 1px solid var(--border);
+        cursor: pointer;
+        transition: all var(--transition);
+        position: relative;
+      }
+
+      .comparison-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--primary);
+        box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
+      }
+
+      .comparison-card.selected {
+        border-color: var(--primary);
+        box-shadow:
+          0 0 0 2px var(--primary),
+          0 8px 24px rgba(99, 102, 241, 0.3);
+      }
+
+      .comparison-card.selected::after {
+        content: "Current View";
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: var(--primary);
+        color: white;
+        font-size: 0.7rem;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 500;
+      }
+
+      .comparison-card img {
+        width: 100%;
+        border-radius: var(--radius-sm);
+        margin-bottom: 12px;
+      }
+
+      .comparison-params {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-size: 0.75rem;
+      }
+
+      .comparison-params .param-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 3px 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .comparison-params .param-row:last-child {
+        border-bottom: none;
+      }
+
+      .comparison-params .param-name {
+        color: var(--text-muted);
+      }
+
+      .comparison-params .param-value {
+        color: var(--text-primary);
+        font-weight: 500;
+      }
+
+      .card-select-hint {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        opacity: 0;
+        transition: opacity var(--transition);
+        pointer-events: none;
+        z-index: 10;
+      }
+
+      .comparison-card:hover .card-select-hint {
+        opacity: 1;
+      }
+
+      .comparison-card.selected .card-select-hint {
+        display: none;
+      }
+
+      /* Range Scan Viewer */
+      .range-scan-viewer {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: var(--radius-sm);
+        padding: 20px;
+        border: 1px solid var(--border);
+      }
+
+      .scan-slider-container {
+        margin-bottom: 20px;
+      }
+
+      .scan-slider-header {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .scan-value-indicator {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-light);
+        background: rgba(99, 102, 241, 0.15);
+        padding: 8px 20px;
+        border-radius: 10px;
+      }
+
+      .scan-slider {
+        width: 100%;
+        height: 12px;
+        -webkit-appearance: none;
+        appearance: none;
+        background: linear-gradient(
+          90deg,
+          var(--edit-color),
+          var(--text-muted) 50%,
+          var(--preserve-color)
+        );
+        border-radius: 6px;
+        outline: none;
+        cursor: pointer;
+      }
+
+      .scan-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 24px;
+        height: 24px;
+        background: white;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        transition: transform 0.2s;
+      }
+
+      .scan-slider::-webkit-slider-thumb:hover {
+        transform: scale(1.15);
+      }
+
+      .scan-slider::-moz-range-thumb {
+        width: 24px;
+        height: 24px;
+        background: white;
+        border-radius: 50%;
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      }
+
+      .scan-range-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-top: 8px;
+      }
+
+      .scan-image-display {
+        text-align: center;
+      }
+
+      .scan-image-display img {
+        max-width: 100%;
+        max-height: 500px;
+        border-radius: var(--radius-sm);
+        object-fit: contain;
+      }
+
+      .scan-stats {
+        margin-top: 12px;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        padding: 12px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+      }
+
+      /* Download Buttons */
+      .download-buttons-group {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .download-concat-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border: none;
+        border-radius: var(--radius-sm);
+        background: linear-gradient(135deg, var(--success), #059669);
+        color: white;
+        font-family: inherit;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all var(--transition);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      }
+
+      .download-concat-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+      }
+
+      .download-concat-btn:active {
+        transform: translateY(0);
+      }
+
+      .download-individual-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border: none;
+        border-radius: var(--radius-sm);
+        background: linear-gradient(135deg, var(--secondary), #2563eb);
+        color: white;
+        font-family: inherit;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all var(--transition);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      }
+
+      .download-individual-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+      }
+
+      .download-individual-btn:active {
+        transform: translateY(0);
+      }
+
+      /* Loading Overlay */
+      .loading-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .loading-overlay.active {
+        display: flex;
+      }
+
+      .spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid rgba(255, 255, 255, 0.1);
+        border-top-color: var(--primary);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .loading-text {
+        color: var(--text-secondary);
+        font-size: 1rem;
+      }
+
+      /* Responsive */
+      @media (max-width: 1024px) {
+        .main-grid {
+          grid-template-columns: 1fr;
+        }
+        .charts-grid,
+        .images-grid,
+        .summary-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Velocity Field Analyzer</h1>
+        <p>Analyze velocity field decomposition in image editing diffusion models</p>
+      </header>
+
+      <div class="main-grid">
+        <!-- Left Panel: Input Configuration -->
+        <div class="panel control-panel">
+          <h2>Input Configuration</h2>
+
+          <!-- Image Upload -->
+          <div class="upload-zone" id="uploadZone">
+            <div class="upload-icon">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17,8 12,3 7,8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+            </div>
+            <p>Click or drag to upload image</p>
+            <span style="font-size: 0.8rem; color: var(--text-muted)"
+              >Supports JPG, PNG, WebP formats</span
+            >
+          </div>
+          <input type="file" id="fileInput" accept="image/*" hidden />
+
+          <!-- Prompt -->
+          <label for="prompt">Edit Instruction</label>
+          <textarea
+            id="prompt"
+            rows="3"
+            placeholder="e.g.: Make skin whiter"
+          ></textarea>
+
+          <!-- Model Selection -->
+          <label>Select Model</label>
+          <div class="model-select" id="modelSelect">
+            <button class="model-btn" data-model="flux" disabled>FLUX</button>
+            <button class="model-btn" data-model="qwen" disabled>Qwen</button>
+          </div>
+
+          <!-- Intervention Config -->
+          <div class="intervention-config">
+            <label>Velocity Intervention Config</label>
+            <div class="config-note">
+              In first X steps, if preserve ratio > Y%, replace with original velocity
+            </div>
+            <div class="config-grid">
+              <div class="config-item">
+                <label for="numSteps">Total Steps (N)</label>
+                <input
+                  type="number"
+                  id="numSteps"
+                  value="12"
+                  min="1"
+                  max="100"
+                />
+              </div>
+              <div class="config-item">
+                <label for="seed">Random Seed</label>
+                <input
+                  type="number"
+                  id="seed"
+                  value="42"
+                  min="0"
+                  max="2147483647"
+                />
+              </div>
+              <div class="config-item">
+                <label for="interventionSteps">Intervention Steps (X)</label>
+                <input
+                  type="number"
+                  id="interventionSteps"
+                  value="1"
+                  min="0"
+                  max="100"
+                />
+              </div>
+            </div>
+            <div class="config-grid-2" style="margin-top: 12px">
+              <div class="config-item">
+                <label for="similarityThreshold">Similarity Threshold (Y%)</label>
+                <input
+                  type="number"
+                  id="similarityThreshold"
+                  value="0"
+                  min="0"
+                  max="100"
+                />
+              </div>
+            </div>
+
+            <!-- Blend Config -->
+            <div
+              style="
+                margin-top: 16px;
+                padding-top: 16px;
+                border-top: 1px solid var(--border);
+              "
+            >
+              <div class="toggle-row">
+                <label for="enableBlend">Weighted Average for Low Similarity</label>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="enableBlend" />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div id="blendWeightContainer" style="display: none">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 6px;
+                  "
+                >
+                  <span style="font-size: 0.8rem; color: var(--preserve-color)"
+                    >Original Velocity</span
+                  >
+                  <span
+                    id="blendWeightDisplay"
+                    style="
+                      font-size: 0.85rem;
+                      font-weight: 600;
+                      color: var(--text-primary);
+                    "
+                    >50%</span
+                  >
+                  <span style="font-size: 0.8rem; color: var(--edit-color)"
+                    >Edit Velocity</span
+                  >
+                </div>
+                <input
+                  type="range"
+                  id="blendWeight"
+                  class="blend-slider"
+                  min="-100"
+                  max="200"
+                  value="50"
+                />
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 0.75rem;
+                    color: var(--text-muted);
+                    margin-top: 4px;
+                  "
+                >
+                  <span>-100%</span>
+                  <span>200%</span>
+                </div>
+                <div class="config-hint" style="margin-top: 10px">
+                  v = a&middot;v_ref + (1-a)&middot;v_pred<br />
+                  a<0%: Reverse enhance edit | a=0%: Pure edit | a=50%: Blend | a=100%:
+                  Pure original | a>100%: Reverse enhance preserve
+                </div>
+              </div>
+
+              <!-- Range Scan -->
+              <div
+                style="
+                  margin-top: 16px;
+                  padding-top: 16px;
+                  border-top: 1px solid var(--border);
+                "
+              >
+                <div class="toggle-row">
+                  <label for="enableRangeScan">Enable a-value Range Scan</label>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="enableRangeScan" />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+                <div id="rangeScanContainer" style="display: none">
+                  <div class="config-grid">
+                    <div class="config-item">
+                      <label for="aScanStart">Start Value (%)</label>
+                      <input
+                        type="number"
+                        id="aScanStart"
+                        value="0"
+                        min="-100"
+                        max="200"
+                      />
+                    </div>
+                    <div class="config-item">
+                      <label for="aScanEnd">End Value (%)</label>
+                      <input
+                        type="number"
+                        id="aScanEnd"
+                        value="100"
+                        min="-100"
+                        max="200"
+                      />
+                    </div>
+                    <div class="config-item">
+                      <label for="aScanStep">Step Size (%)</label>
+                      <input
+                        type="number"
+                        id="aScanStep"
+                        value="10"
+                        min="1"
+                        max="100"
+                      />
+                    </div>
+                  </div>
+                  <div class="config-hint" style="margin-top: 8px">
+                    Will generate
+                    <span
+                      id="scanCountPreview"
+                      style="color: var(--primary-light); font-weight: 600"
+                      >11</span
+                    >
+                    configs
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="config-hint">Hint: Intervention steps = 0 means no intervention</div>
+          </div>
+
+          <!-- Config Presets -->
+          <div class="config-presets">
+            <div class="preset-header">
+              <label>Parameter Combinations</label>
+              <button
+                class="add-preset-btn"
+                id="addPresetBtn"
+                title="Add Current Config"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  width="16"
+                  height="16"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Add Config
+              </button>
+            </div>
+            <div class="preset-list" id="presetList">
+              <div class="preset-empty" id="presetEmpty">
+                <span>No parameter combinations yet, click button above to add current config</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <button class="submit-btn" id="submitBtn" disabled>Analyze</button>
+
+          <!-- Status Bar -->
+          <div class="status-bar" id="statusBar">Waiting for image upload...</div>
+        </div>
+
+        <!-- Right Panel: Results -->
+        <div class="panel results-panel">
+          <h2>Analysis Results</h2>
+
+          <!-- Placeholder -->
+          <div class="placeholder" id="resultsPlaceholder">
+            <div class="placeholder-icon">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M3 3v18h18" />
+                <path d="M18 17V9" />
+                <path d="M13 17V5" />
+                <path d="M8 17v-3" />
+              </svg>
+            </div>
+            <p>Upload image and run analysis to view velocity field decomposition results</p>
+          </div>
+
+          <!-- Results Content -->
+          <div class="results-content" id="resultsContent">
+            <!-- History Pagination -->
+            <div
+              class="history-pagination"
+              id="historyPagination"
+              style="display: none"
+            >
+              <div class="history-info">
+                <span class="history-label">History</span>
+                <span class="history-index" id="historyIndex">1 / 1</span>
+              </div>
+              <div class="history-controls">
+                <button class="page-btn" id="historyPrevBtn" title="Previous">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                  </svg>
+                </button>
+                <button class="page-btn" id="historyNextBtn" title="Next">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </button>
+                <button
+                  class="save-btn"
+                  id="historySaveBtn"
+                  title="Save Current Result"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
+                    ></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                  </svg>
+                  Save
+                </button>
+                <button class="clear-btn" id="historyClearBtn" title="Clear History">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path
+                      d="m19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                    ></path>
+                  </svg>
+                  Clear
+                </button>
+              </div>
+            </div>
+
+            <!-- History Metadata -->
+            <div class="history-meta" id="historyMeta" style="display: none">
+              <span id="historyPrompt">Prompt: --</span>
+              <span id="historySeed">Seed: --</span>
+              <span id="historyTime">Time: --</span>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="summary-grid">
+              <div class="summary-card preserve">
+                <div class="value" id="preserveRatio">--</div>
+                <div class="label">Avg Preserve Ratio</div>
+              </div>
+              <div class="summary-card edit">
+                <div class="value" id="editRatio">--</div>
+                <div class="label">Avg Edit Ratio</div>
+              </div>
+              <div class="summary-card angle">
+                <div class="value" id="meanAngle">--</div>
+                <div class="label">Avg Angle</div>
+              </div>
+            </div>
+
+            <!-- Charts (2x2 grid) -->
+            <div class="charts-section">
+              <div class="charts-grid">
+                <div class="chart-container">
+                  <h3>Velocity Component Ratio</h3>
+                  <div id="chartRatios"></div>
+                  <div class="chart-note">
+                    <strong>Meaning:</strong
+                    >Shows the ratio of "preserve original" and "edit offset" components in predicted velocity at each step.
+                    <br />&bull;
+                    <span style="color: #22c55e">Green (Preserve)</span
+                    >: Component along original velocity direction, higher means more preservation
+                    <br />&bull;
+                    <span style="color: #f59e0b">Orange (Edit)</span
+                    >: Component perpendicular to original velocity, higher means stronger editing
+                  </div>
+                </div>
+                <div class="chart-container">
+                  <h3>Angle to Original Velocity</h3>
+                  <div id="chartAngle"></div>
+                  <div class="chart-note">
+                    <strong>Meaning:</strong
+                    >Angle between predicted velocity and original velocity (fixed direction from noise to original image).
+                    <br />&bull; 0&deg; = Completely preserve original direction, no editing
+                    <br />&bull; 90&deg; = Completely perpendicular to original, pure editing
+                    <br />&bull;
+                    Smaller angle means more focus on preserving original, larger angle means more editing
+                  </div>
+                </div>
+                <div class="chart-container">
+                  <h3>Velocity Component Magnitude</h3>
+                  <div id="chartMagnitudes"></div>
+                  <div class="chart-note">
+                    <strong>Meaning:</strong
+                    >Shows absolute magnitude (L2 norm) of two velocity components at each step. <br />&bull;
+                    <span style="color: #22c55e">Green (Preserve)</span
+                    >: Magnitude of component along original velocity direction <br />&bull;
+                    <span style="color: #f59e0b">Orange (Edit)</span
+                    >: Magnitude of perpendicular component <br />&bull;
+                    Usually larger in early denoising stages, gradually decreases later
+                  </div>
+                </div>
+                <div class="chart-container">
+                  <h3>Distance to Original Image</h3>
+                  <div id="chartDistance"></div>
+                  <div class="chart-note">
+                    <strong>Meaning:</strong>Current latent position and original latent
+                    Euclidean distance between them. <br />&bull;
+                    Decreasing distance indicates trajectory approaching original image <br />&bull;
+                    If distance decreases then increases, it means deviation from original starts midway (editing takes effect)
+                    <br />&bull; Can observe when editing starts to significantly affect the trajectory
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step Prediction Images -->
+            <div
+              class="step-images-section"
+              id="stepImagesSection"
+              style="display: none"
+            >
+              <div class="step-slider-container">
+                <div class="step-slider-header">
+                  <h3>x₀ Prediction Images at Each Step</h3>
+                  <span class="step-indicator" id="stepIndicator"
+                    >Step 0 / 0</span
+                  >
+                </div>
+                <input
+                  type="range"
+                  class="step-slider"
+                  id="stepSlider"
+                  min="0"
+                  max="0"
+                  value="0"
+                />
+                <div class="chart-note" style="margin-top: 12px">
+                  <strong>Note:</strong
+                  >At each step, after complete denoising using current predicted velocity (x₀ = z_t -
+                  σ_t × v_t), the image obtained after VAE decoding.
+                </div>
+              </div>
+              <div class="step-image-display">
+                <h4 id="stepImageTitle">Step 0 Prediction Result (σ = 1.0000)</h4>
+                <img id="stepImage" src="" alt="Step Prediction Image" />
+                <div class="step-info" id="stepInfo">
+                  Preserve Ratio: --% | Edit Ratio: --% | Angle: --&deg;
+                </div>
+              </div>
+            </div>
+
+            <!-- Similarity Mask Images -->
+            <div
+              class="step-images-section"
+              id="maskImagesSection"
+              style="display: none"
+            >
+              <div class="step-slider-container">
+                <div class="step-slider-header">
+                  <h3>Similarity Mask at Each Step</h3>
+                  <span class="step-indicator" id="maskStepIndicator"
+                    >Step 0 / 0</span
+                  >
+                </div>
+                <input
+                  type="range"
+                  class="step-slider"
+                  id="maskSlider"
+                  min="0"
+                  max="0"
+                  value="0"
+                />
+                <div class="chart-note" style="margin-top: 12px">
+                  <strong>Note:</strong>Similarity at each step
+                  Mask, generated based on velocity similarity threshold. <br />&bull;
+                  <span style="color: #000; background: #fff; padding: 0 4px"
+                    >White Areas</span
+                  >: Similarity below threshold, indicates areas with large editing changes <br />&bull;
+                  <span style="color: #fff; background: #000; padding: 0 4px"
+                    >Black Areas</span
+                  >: Similarity above threshold, indicates areas preserving original
+                </div>
+              </div>
+              <!-- Side-by-side B&W mask and colored heatmap -->
+              <div
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px"
+              >
+                <div class="step-image-display">
+                  <h4 id="maskImageTitle">
+                    Step 0 Similarity Mask (σ = 1.0000)
+                  </h4>
+                  <img
+                    id="maskImage"
+                    src=""
+                    alt="Similarity Mask"
+                    style="background: #666"
+                  />
+                  <div class="step-info" id="maskInfo">
+                    Similarity Threshold: --% | White Area Ratio: --%
+                  </div>
+                </div>
+                <div
+                  class="step-image-display"
+                  id="heatmapMaskDisplay"
+                  style="display: none"
+                >
+                  <h4 id="heatmapMaskTitle">
+                    Step 0 Similarity Heatmap (σ = 1.0000)
+                  </h4>
+                  <img id="heatmapMaskImage" src="" alt="Similarity Heatmap" />
+                  <!-- Viridis Color Legend -->
+                  <div
+                    style="
+                      margin-top: 12px;
+                      padding: 10px;
+                      background: rgba(0, 0, 0, 0.2);
+                      border-radius: 8px;
+                    "
+                  >
+                    <div
+                      style="
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        margin-bottom: 8px;
+                      "
+                    >
+                      <span
+                        style="font-size: 0.85rem; color: var(--text-secondary)"
+                        >Edit Intensity Legend (Viridis)</span
+                      >
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px">
+                      <span style="font-size: 0.75rem; color: var(--text-muted)"
+                        >Preserve</span
+                      >
+                      <div
+                        style="
+                          flex: 1;
+                          height: 16px;
+                          border-radius: 4px;
+                          background: linear-gradient(
+                            to right,
+                            #440154,
+                            #482878,
+                            #3e4a89,
+                            #31688e,
+                            #26838f,
+                            #1f9e89,
+                            #35b779,
+                            #6ece58,
+                            #b5de2b,
+                            #fde725
+                          );
+                        "
+                      ></div>
+                      <span style="font-size: 0.75rem; color: var(--text-muted)"
+                        >Edit</span
+                      >
+                    </div>
+                    <div
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        margin-top: 4px;
+                      "
+                    >
+                      <span style="font-size: 0.7rem; color: #440154">0%</span>
+                      <span style="font-size: 0.7rem; color: #1f9e89">50%</span>
+                      <span style="font-size: 0.7rem; color: #fde725"
+                        >100%</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Comparison Results (batch mode) -->
+            <div
+              class="comparison-section"
+              id="comparisonSection"
+              style="display: none"
+            >
+              <h3
+                style="
+                  margin-bottom: 16px;
+                  font-size: 1rem;
+                  font-weight: 600;
+                  color: var(--text-primary);
+                "
+              >
+                Parameter CombinationsComparison Results
+              </h3>
+              <div class="comparison-grid" id="comparisonGrid"></div>
+            </div>
+
+            <!-- Range Scan Results -->
+            <div
+              class="range-scan-section"
+              id="rangeScanSection"
+              style="display: none"
+            >
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 16px;
+                  flex-wrap: wrap;
+                  gap: 12px;
+                "
+              >
+                <h3
+                  style="
+                    font-size: 1rem;
+                    font-weight: 600;
+                    color: var(--text-primary);
+                    margin: 0;
+                  "
+                >
+                  a-value Range Scan Results
+                </h3>
+                <div class="download-buttons-group">
+                  <button
+                    class="download-concat-btn"
+                    id="downloadConcatBtn"
+                    onclick="downloadConcatenatedImages()"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      width="16"
+                      height="16"
+                    >
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="7,10 12,15 17,10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    Download Concatenated
+                  </button>
+                  <button
+                    class="download-concat-btn"
+                    id="downloadReversedBtn"
+                    onclick="downloadReversedConcatenatedImages()"
+                    style="
+                      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+                    "
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      width="16"
+                      height="16"
+                    >
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="7,10 12,15 17,10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    Download Reversed Concat
+                  </button>
+                  <button
+                    class="download-individual-btn"
+                    id="downloadIndividualBtn"
+                    onclick="downloadIndividualImages()"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      width="16"
+                      height="16"
+                    >
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="7,10 12,15 17,10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    Save All Individual
+                  </button>
+                </div>
+              </div>
+              <div class="range-scan-viewer">
+                <div class="scan-slider-container">
+                  <div class="scan-slider-header">
+                    <span style="color: var(--text-muted)">a value:</span>
+                    <span class="scan-value-indicator" id="scanValueIndicator"
+                      >a = 50%</span
+                    >
+                  </div>
+                  <input
+                    type="range"
+                    class="scan-slider"
+                    id="scanResultSlider"
+                    min="0"
+                    max="10"
+                    value="0"
+                  />
+                  <div class="scan-range-labels" id="scanRangeLabels">
+                    <span>0%</span>
+                    <span>100%</span>
+                  </div>
+                </div>
+                <div class="scan-image-display">
+                  <img id="scanResultImage" src="" alt="Scan Result" />
+                  <div class="scan-stats" id="scanStats">
+                    Preserve Ratio: --% | Edit Ratio: --% | Angle: --&deg;
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Original / Generated Images -->
+            <div class="images-section" id="singleResultSection">
+              <div class="images-grid">
+                <div class="image-card">
+                  <h3>Original Image</h3>
+                  <img id="originalImage" src="" alt="Original" />
+                </div>
+                <div class="image-card">
+                  <h3>Generated Image</h3>
+                  <img id="generatedImage" src="" alt="Generated Result" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Data Table -->
+            <div class="data-section">
+              <h3>Step-by-Step Data</h3>
+              <div class="data-table-wrapper">
+                <table class="data-table" id="dataTable">
+                  <thead>
+                    <tr>
+                      <th>Steps</th>
+                      <th>Sigma</th>
+                      <th>Preserve Ratio</th>
+                      <th>Edit Ratio</th>
+                      <th>Angle</th>
+                      <th>Distance</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dataTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner"></div>
+      <div class="loading-text" id="loadingText">Analyzing velocity field...</div>
+    </div>
+
+    <script>
+      // =====================================================================
+      // State
+      // =====================================================================
+      const API_BASE = "";
+      let uploadedImage = null;
+      let uploadedImageName = "input";
+      let selectedModel = null;
+
+      // Step images data
+      let stepImagesData = [];
+      let perStepData = [];
+
+      // Similarity mask images data
+      let maskImagesData = [];
+      let heatmapMaskImagesData = [];
+
+      // Parameter presets for batch comparison
+      let configPresets = [];
+
+      // Batch comparison results
+      let batchResults = [];
+      let selectedResultIndex = -1;
+
+      // History cache
+      let historyCache = [];
+      let currentHistoryIndex = -1;
+      let currentResultData = null;
+
+      // Range scan results
+      let rangeScanResults = [];
+      let rangeScanAValues = [];
+
+      // =====================================================================
+      // DOM Elements
+      // =====================================================================
+      const uploadZone = document.getElementById("uploadZone");
+      const fileInput = document.getElementById("fileInput");
+      const promptInput = document.getElementById("prompt");
+      const submitBtn = document.getElementById("submitBtn");
+      const statusBar = document.getElementById("statusBar");
+      const modelSelect = document.getElementById("modelSelect");
+      const resultsPlaceholder = document.getElementById("resultsPlaceholder");
+      const resultsContent = document.getElementById("resultsContent");
+      const loadingOverlay = document.getElementById("loadingOverlay");
+      const loadingText = document.getElementById("loadingText");
+
+      // Step images elements
+      const stepImagesSection = document.getElementById("stepImagesSection");
+      const stepSlider = document.getElementById("stepSlider");
+      const stepIndicator = document.getElementById("stepIndicator");
+      const stepImage = document.getElementById("stepImage");
+      const stepImageTitle = document.getElementById("stepImageTitle");
+      const stepInfo = document.getElementById("stepInfo");
+
+      // Mask images elements
+      const maskImagesSection = document.getElementById("maskImagesSection");
+      const maskSlider = document.getElementById("maskSlider");
+      const maskStepIndicator = document.getElementById("maskStepIndicator");
+      const maskImage = document.getElementById("maskImage");
+      const maskImageTitle = document.getElementById("maskImageTitle");
+      const maskInfo = document.getElementById("maskInfo");
+
+      // History elements
+      const historyPagination = document.getElementById("historyPagination");
+      const historyIndex = document.getElementById("historyIndex");
+      const historyPrevBtn = document.getElementById("historyPrevBtn");
+      const historyNextBtn = document.getElementById("historyNextBtn");
+      const historySaveBtn = document.getElementById("historySaveBtn");
+      const historyClearBtn = document.getElementById("historyClearBtn");
+      const historyMeta = document.getElementById("historyMeta");
+      const historyPrompt = document.getElementById("historyPrompt");
+      const historySeed = document.getElementById("historySeed");
+      const historyTime = document.getElementById("historyTime");
+
+      // Blend elements
+      const enableBlendCheckbox = document.getElementById("enableBlend");
+      const blendWeightContainer = document.getElementById(
+        "blendWeightContainer",
+      );
+      const blendWeightSlider = document.getElementById("blendWeight");
+      const blendWeightDisplay = document.getElementById("blendWeightDisplay");
+
+      // Range scan elements
+      const enableRangeScanCheckbox =
+        document.getElementById("enableRangeScan");
+      const rangeScanContainer = document.getElementById("rangeScanContainer");
+      const aScanStartInput = document.getElementById("aScanStart");
+      const aScanEndInput = document.getElementById("aScanEnd");
+      const aScanStepInput = document.getElementById("aScanStep");
+      const scanCountPreview = document.getElementById("scanCountPreview");
+
+      // Preset elements
+      const addPresetBtn = document.getElementById("addPresetBtn");
+      const presetList = document.getElementById("presetList");
+      const presetEmpty = document.getElementById("presetEmpty");
+
+      // =====================================================================
+      // Event Handlers: Upload
+      // =====================================================================
+      uploadZone.onclick = () => fileInput.click();
+
+      uploadZone.ondragover = (e) => {
+        e.preventDefault();
+        uploadZone.style.borderColor = "var(--primary)";
+      };
+
+      uploadZone.ondragleave = () => {
+        uploadZone.style.borderColor = "";
+      };
+
+      uploadZone.ondrop = (e) => {
+        e.preventDefault();
+        uploadZone.style.borderColor = "";
+        if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+      };
+
+      fileInput.onchange = () => {
+        if (fileInput.files[0]) handleFile(fileInput.files[0]);
+      };
+
+      function handleFile(file) {
+        if (!file.type.startsWith("image/")) {
+          alert("Please upload an image file");
+          return;
+        }
+        uploadedImageName = file.name.replace(/\.[^/.]+$/, "");
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          uploadedImage = e.target.result;
+          uploadZone.innerHTML = `<img src="${uploadedImage}" alt="Preview">`;
+          uploadZone.classList.add("has-image");
+          document.getElementById("originalImage").src = uploadedImage;
+          statusBar.textContent = "Image uploaded, please select model and analyze";
+          updateSubmitBtn();
+        };
+        reader.readAsDataURL(file);
+      }
+
+      // =====================================================================
+      // Event Handlers: Model Selection
+      // =====================================================================
+      function selectModel(model, btn) {
+        modelSelect
+          .querySelectorAll(".model-btn")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        selectedModel = model;
+        updateSubmitBtn();
+      }
+
+      function updateSubmitBtn() {
+        submitBtn.disabled = !uploadedImage || !selectedModel;
+      }
+
+      // =====================================================================
+      // Event Handlers: Blend Toggle & Slider
+      // =====================================================================
+      enableBlendCheckbox.onchange = function () {
+        blendWeightContainer.style.display = this.checked ? "block" : "none";
+      };
+
+      blendWeightSlider.oninput = function () {
+        blendWeightDisplay.textContent = `${parseInt(this.value)}%`;
+      };
+
+      // =====================================================================
+      // Event Handlers: Range Scan Toggle
+      // =====================================================================
+      enableRangeScanCheckbox.onchange = function () {
+        rangeScanContainer.style.display = this.checked ? "block" : "none";
+        // Auto-enable blend when range scan is on
+        if (this.checked) {
+          enableBlendCheckbox.checked = true;
+          blendWeightContainer.style.display = "block";
+        }
+        updateScanCountPreview();
+      };
+
+      function updateScanCountPreview() {
+        const start = parseInt(aScanStartInput.value) || 0;
+        const end = parseInt(aScanEndInput.value) || 100;
+        const step = parseInt(aScanStepInput.value) || 10;
+        const count = Math.max(0, Math.floor((end - start) / step) + 1);
+        scanCountPreview.textContent = count;
+      }
+
+      aScanStartInput.oninput = updateScanCountPreview;
+      aScanEndInput.oninput = updateScanCountPreview;
+      aScanStepInput.oninput = updateScanCountPreview;
+
+      // =====================================================================
+      // Event Handlers: Slider Displays
+      // =====================================================================
+      stepSlider.oninput = function () {
+        updateStepDisplay(parseInt(this.value));
+      };
+
+      maskSlider.oninput = function () {
+        updateMaskDisplay(parseInt(this.value));
+      };
+
+      document.getElementById("scanResultSlider").oninput = function () {
+        updateRangeScanDisplay(parseInt(this.value));
+      };
+
+      // =====================================================================
+      // Event Handlers: History
+      // =====================================================================
+      historyPrevBtn.onclick = function () {
+        if (currentHistoryIndex > 0) {
+          currentHistoryIndex--;
+          displayHistoryResult(currentHistoryIndex);
+        }
+      };
+
+      historyNextBtn.onclick = function () {
+        if (currentHistoryIndex < historyCache.length - 1) {
+          currentHistoryIndex++;
+          displayHistoryResult(currentHistoryIndex);
+        }
+      };
+
+      historySaveBtn.onclick = function () {
+        saveCurrentToHistory();
+      };
+
+      historyClearBtn.onclick = function () {
+        if (confirm("Are you sure you want to clear all history?")) {
+          clearHistory();
+        }
+      };
+
+      // =====================================================================
+      // Event Handlers: Presets
+      // =====================================================================
+      addPresetBtn.onclick = addPreset;
+
+      // =====================================================================
+      // Config Helpers
+      // =====================================================================
+      function getCurrentConfig() {
+        return {
+          numSteps: parseInt(document.getElementById("numSteps").value) || 12,
+          seed: parseInt(document.getElementById("seed").value) || 42,
+          interventionSteps:
+            parseInt(document.getElementById("interventionSteps").value) || 0,
+          similarityThreshold:
+            parseInt(document.getElementById("similarityThreshold").value) || 0,
+          enableBlend: document.getElementById("enableBlend").checked,
+          blendWeight:
+            parseInt(document.getElementById("blendWeight").value) || 50,
+        };
+      }
+
+      function formatConfigSummary(config) {
+        let parts = [
+          `N=${config.numSteps}`,
+          `X=${config.interventionSteps}`,
+          `Y=${config.similarityThreshold}%`,
+        ];
+        if (config.enableBlend) {
+          parts.push(`Blend=${config.blendWeight}%`);
+        }
+        return parts.join(", ");
+      }
+
+      // =====================================================================
+      // Preset Management
+      // =====================================================================
+      function addPreset() {
+        const config = getCurrentConfig();
+        const presetId = Date.now();
+        const presetName = `Config ${configPresets.length + 1}`;
+        configPresets.push({ id: presetId, name: presetName, config: config });
+        renderPresetList();
+      }
+
+      function removePreset(presetId) {
+        configPresets = configPresets.filter((p) => p.id !== presetId);
+        renderPresetList();
+      }
+
+      function renderPresetList() {
+        if (configPresets.length === 0) {
+          presetEmpty.style.display = "block";
+          presetList.innerHTML = "";
+          presetList.appendChild(presetEmpty);
+          return;
+        }
+        presetEmpty.style.display = "none";
+        presetList.innerHTML = configPresets
+          .map(
+            (preset) => `
+          <div class="preset-item" data-id="${preset.id}">
+            <div class="preset-info">
+              <div class="preset-name">${preset.name}</div>
+              <div class="preset-params">${formatConfigSummary(preset.config)}</div>
+            </div>
+            <button class="preset-delete-btn" onclick="removePreset(${preset.id})" title="Delete">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        `,
+          )
+          .join("");
+      }
+
+      // =====================================================================
+      // Range Scan Config Generator
+      // =====================================================================
+      function generateRangeScanConfigs() {
+        const baseConfig = getCurrentConfig();
+        const start = parseInt(aScanStartInput.value) || 0;
+        const end = parseInt(aScanEndInput.value) || 100;
+        const step = parseInt(aScanStepInput.value) || 10;
+
+        const configs = [];
+        for (let a = start; a <= end; a += step) {
+          configs.push({
+            id: Date.now() + a,
+            name: `a = ${a}%`,
+            config: {
+              ...baseConfig,
+              enableBlend: true,
+              blendWeight: a,
+            },
+            aValue: a,
+          });
+        }
+        return configs;
+      }
+
+      // =====================================================================
+      // History Management
+      // =====================================================================
+      function saveCurrentToHistory() {
+        if (!currentResultData) {
+          alert("No results to save");
+          return;
+        }
+        const historyItem = {
+          ...currentResultData,
+          type: currentResultData.type || "single",
+          prompt: promptInput.value.trim() || "Unnamed",
+          config: getCurrentConfig(),
+          timestamp: new Date().toLocaleString("zh-CN"),
+          originalImage: uploadedImage,
+        };
+        historyCache.push(historyItem);
+        currentHistoryIndex = historyCache.length - 1;
+        updateHistoryPagination();
+
+        const typeNames = {
+          single: "Single Analysis",
+          batch: "Batch Comparison",
+          rangeScan: "Range Scan",
+        };
+        const typeName = typeNames[historyItem.type] || "Analysis";
+        statusBar.textContent = `Saved result #${historyCache.length} (${typeName})`;
+      }
+
+      function displayHistoryResult(index) {
+        if (index < 0 || index >= historyCache.length) return;
+
+        const item = historyCache[index];
+        currentHistoryIndex = index;
+
+        if (item.type === "rangeScan") {
+          rangeScanResults = item.results;
+          rangeScanAValues = item.aValues;
+          displayRangeScanResults(item.results);
+        } else if (item.type === "batch") {
+          displayComparisonResults(item.results);
+        } else {
+          displayResults(item);
+        }
+
+        if (item.originalImage) {
+          document.getElementById("originalImage").src = item.originalImage;
+        }
+
+        historyMeta.style.display = "flex";
+        historyPrompt.textContent = `Prompt: ${item.prompt}`;
+        historySeed.textContent = `Seed: ${item.config?.seed || "Unknown"}`;
+        historyTime.textContent = `Time: ${item.timestamp}`;
+
+        updateHistoryPagination();
+      }
+
+      function updateHistoryPagination() {
+        if (historyCache.length === 0) {
+          historyPagination.style.display = "none";
+          historyMeta.style.display = "none";
+          return;
+        }
+        historyPagination.style.display = "flex";
+        historyIndex.textContent = `${currentHistoryIndex + 1} / ${historyCache.length}`;
+        historyPrevBtn.disabled = currentHistoryIndex <= 0;
+        historyNextBtn.disabled =
+          currentHistoryIndex >= historyCache.length - 1;
+      }
+
+      function clearHistory() {
+        historyCache = [];
+        currentHistoryIndex = -1;
+        currentResultData = null;
+        updateHistoryPagination();
+        historyMeta.style.display = "none";
+        statusBar.textContent = "History cleared";
+      }
+
+      // =====================================================================
+      // Step Display Updates
+      // =====================================================================
+      function updateStepDisplay(stepIndex) {
+        if (stepImagesData.length === 0) return;
+        const totalSteps = stepImagesData.length;
+        stepIndicator.textContent = `Step ${stepIndex} / ${totalSteps - 1}`;
+        stepImage.src = `data:image/png;base64,${stepImagesData[stepIndex]}`;
+
+        if (perStepData[stepIndex]) {
+          const d = perStepData[stepIndex];
+          stepImageTitle.textContent = `Step ${stepIndex} Prediction Result (σ = ${d.sigma.toFixed(4)})`;
+          stepInfo.textContent = `Preserve Ratio: ${(d.preserve_ratio * 100).toFixed(1)}% | Edit Ratio: ${(d.edit_ratio * 100).toFixed(1)}% | Angle: ${d.angle_to_reference.toFixed(1)}\u00b0`;
+        }
+      }
+
+      function updateMaskDisplay(stepIndex) {
+        if (maskImagesData.length === 0) return;
+        const totalSteps = maskImagesData.length;
+        maskStepIndicator.textContent = `Step ${stepIndex} / ${totalSteps - 1}`;
+        maskImage.src = `data:image/png;base64,${maskImagesData[stepIndex]}`;
+
+        if (perStepData[stepIndex]) {
+          const d = perStepData[stepIndex];
+          const threshold =
+            parseInt(document.getElementById("similarityThreshold").value) || 0;
+          maskImageTitle.textContent = `Step ${stepIndex} Similarity Mask (σ = ${d.sigma.toFixed(4)})`;
+          maskInfo.textContent = `Similarity Threshold: ${threshold}% | Edit Ratio: ${(d.edit_ratio * 100).toFixed(1)}%`;
+        }
+
+        // Update heatmap display if available
+        const heatmapMaskDisplay =
+          document.getElementById("heatmapMaskDisplay");
+        const heatmapMaskImage = document.getElementById("heatmapMaskImage");
+        const heatmapMaskTitle = document.getElementById("heatmapMaskTitle");
+
+        if (
+          heatmapMaskImagesData.length > 0 &&
+          heatmapMaskImagesData[stepIndex]
+        ) {
+          heatmapMaskImage.src = `data:image/png;base64,${heatmapMaskImagesData[stepIndex]}`;
+          if (perStepData[stepIndex]) {
+            const d = perStepData[stepIndex];
+            heatmapMaskTitle.textContent = `Step ${stepIndex} Similarity Heatmap (σ = ${d.sigma.toFixed(4)})`;
+          }
+          heatmapMaskDisplay.style.display = "block";
+        } else {
+          heatmapMaskDisplay.style.display = "none";
+        }
+      }
+
+      // =====================================================================
+      // Loading Helpers
+      // =====================================================================
+      function showLoading(text) {
+        loadingText.textContent = text;
+        loadingOverlay.classList.add("active");
+      }
+
+      function hideLoading() {
+        loadingOverlay.classList.remove("active");
+      }
+
+      // =====================================================================
+      // API: Single Analysis
+      // =====================================================================
+      async function runSingleAnalysis(config, prompt) {
+        const res = await fetch(`${API_BASE}/analyze`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            image: uploadedImage,
+            prompt: prompt,
+            model: selectedModel,
+            image_name: uploadedImageName,
+            num_inference_steps: config.numSteps,
+            seed: config.seed,
+            intervention_steps: config.interventionSteps,
+            similarity_threshold: config.similarityThreshold / 100,
+            enable_blend: config.enableBlend,
+            blend_weight: config.blendWeight / 100,
+          }),
+        });
+        return await res.json();
+      }
+
+      // =====================================================================
+      // Submit Analysis
+      // =====================================================================
+      submitBtn.onclick = async () => {
+        if (!uploadedImage || !selectedModel) return;
+
+        const prompt = promptInput.value.trim();
+        if (!prompt) {
+          alert("Please enter edit instruction");
+          return;
+        }
+
+        submitBtn.disabled = true;
+
+        const isRangeScanMode = enableRangeScanCheckbox.checked;
+
+        let configsToRun;
+        let isBatchMode;
+
+        if (isRangeScanMode) {
+          configsToRun = generateRangeScanConfigs();
+          isBatchMode = true;
+        } else if (configPresets.length > 0) {
+          configsToRun = configPresets;
+          isBatchMode = true;
+        } else {
+          configsToRun = [
+            { id: 0, name: "Current Config", config: getCurrentConfig() },
+          ];
+          isBatchMode = false;
+        }
+
+        const totalConfigs = configsToRun.length;
+        const comparisonResults = [];
+
+        try {
+          for (let i = 0; i < totalConfigs; i++) {
+            const preset = configsToRun[i];
+            const config = preset.config;
+
+            showLoading(`Analyzing ${i + 1}/${totalConfigs}: ${preset.name}...`);
+
+            const data = await runSingleAnalysis(config, prompt);
+
+            if (data.success) {
+              comparisonResults.push({ preset: preset, data: data });
+            } else {
+              console.error(`Config ${preset.name} Analysis failed:`, data.error);
+            }
+          }
+
+          if (comparisonResults.length > 0) {
+            if (isRangeScanMode) {
+              displayRangeScanResults(comparisonResults);
+              statusBar.textContent = `Range scan completed, total ${comparisonResults.length} a values`;
+            } else if (isBatchMode) {
+              displayComparisonResults(comparisonResults);
+              statusBar.textContent = `Batch analysis completed, total ${comparisonResults.length} configs`;
+            } else {
+              displayResults(comparisonResults[0].data);
+              const interventionInfo =
+                comparisonResults[0].data.interventions_applied > 0
+                  ? `, Intervened ${comparisonResults[0].data.interventions_applied} steps`
+                  : "";
+              statusBar.textContent = `Analysis completed. Model used: ${comparisonResults[0].data.model_name}${interventionInfo}. Click "Save"Saveresult`;
+            }
+          } else {
+            statusBar.textContent = "All config analysis failed";
+            alert("All config analysis failed, please check parameters");
+          }
+        } catch (e) {
+          statusBar.textContent = `Request failed：${e.message}`;
+          alert(`Request failed：${e.message}`);
+        }
+
+        hideLoading();
+        submitBtn.disabled = false;
+        updateSubmitBtn();
+      };
+
+      // =====================================================================
+      // Display: Single Result
+      // =====================================================================
+      function displayResults(data) {
+        resultsPlaceholder.style.display = "none";
+        resultsContent.classList.add("active");
+
+        // Store for history
+        currentResultData = data;
+
+        // Show history pagination
+        historyPagination.style.display = "flex";
+        if (historyCache.length > 0) {
+          updateHistoryPagination();
+        } else {
+          historyIndex.textContent = "New Result";
+          historyPrevBtn.disabled = true;
+          historyNextBtn.disabled = true;
+        }
+
+        // Hide batch/scan sections, show single
+        document.getElementById("comparisonSection").style.display = "none";
+        document.getElementById("rangeScanSection").style.display = "none";
+        document.getElementById("singleResultSection").style.display = "block";
+
+        // Populate details
+        displayResultDetails(data);
+      }
+
+      // =====================================================================
+      // Display: Result Details (shared by single, batch, scan)
+      // =====================================================================
+      function displayResultDetails(data) {
+        // Summary cards
+        document.getElementById("preserveRatio").textContent =
+          (data.summary.mean_preserve_ratio * 100).toFixed(1) + "%";
+        document.getElementById("editRatio").textContent =
+          (data.summary.mean_edit_ratio * 100).toFixed(1) + "%";
+        document.getElementById("meanAngle").textContent =
+          data.summary.mean_angle.toFixed(1) + "\u00b0";
+
+        // Generated image
+        if (data.generated_image) {
+          document.getElementById("generatedImage").src =
+            `data:image/png;base64,${data.generated_image}`;
+        }
+
+        // Original image
+        if (uploadedImage) {
+          document.getElementById("originalImage").src = uploadedImage;
+        }
+
+        // Charts
+        const steps = data.per_step.map((d) => d.step);
+        const preserveRatios = data.per_step.map((d) => d.preserve_ratio);
+        const editRatios = data.per_step.map((d) => d.edit_ratio);
+        const angles = data.per_step.map((d) => d.angle_to_reference);
+        const preserveMags = data.per_step.map((d) => d.preserve_magnitude);
+        const editMags = data.per_step.map((d) => d.edit_magnitude);
+        const distances = data.per_step.map((d) => d.distance_to_ref);
+
+        const chartLayout = {
+          paper_bgcolor: "transparent",
+          plot_bgcolor: "transparent",
+          font: { color: "#94a3b8", size: 11 },
+          margin: { l: 50, r: 20, t: 20, b: 40 },
+          xaxis: {
+            title: "Steps",
+            gridcolor: "rgba(255,255,255,0.05)",
+            zerolinecolor: "rgba(255,255,255,0.1)",
+          },
+          yaxis: {
+            gridcolor: "rgba(255,255,255,0.05)",
+            zerolinecolor: "rgba(255,255,255,0.1)",
+          },
+          showlegend: true,
+          legend: { x: 0.5, y: 1.1, xanchor: "center", orientation: "h" },
+        };
+
+        const plotConfig = { responsive: true, displayModeBar: false };
+
+        Plotly.newPlot(
+          "chartRatios",
+          [
+            {
+              x: steps,
+              y: preserveRatios,
+              name: "Preserve",
+              line: { color: "#22c55e", width: 2 },
+            },
+            {
+              x: steps,
+              y: editRatios,
+              name: "Edit",
+              line: { color: "#f59e0b", width: 2 },
+            },
+          ],
+          { ...chartLayout, yaxis: { ...chartLayout.yaxis, title: "Ratio" } },
+          plotConfig,
+        );
+
+        Plotly.newPlot(
+          "chartAngle",
+          [
+            {
+              x: steps,
+              y: angles,
+              name: "Angle",
+              line: { color: "#3b82f6", width: 2 },
+            },
+          ],
+          {
+            ...chartLayout,
+            yaxis: { ...chartLayout.yaxis, title: "Angle (°)" },
+            showlegend: false,
+          },
+          plotConfig,
+        );
+
+        Plotly.newPlot(
+          "chartMagnitudes",
+          [
+            {
+              x: steps,
+              y: preserveMags,
+              name: "Preserve",
+              line: { color: "#22c55e", width: 2 },
+            },
+            {
+              x: steps,
+              y: editMags,
+              name: "Edit",
+              line: { color: "#f59e0b", width: 2 },
+            },
+          ],
+          { ...chartLayout, yaxis: { ...chartLayout.yaxis, title: "Magnitude" } },
+          plotConfig,
+        );
+
+        Plotly.newPlot(
+          "chartDistance",
+          [
+            {
+              x: steps,
+              y: distances,
+              name: "Distance",
+              line: { color: "#8b5cf6", width: 2 },
+            },
+          ],
+          {
+            ...chartLayout,
+            yaxis: { ...chartLayout.yaxis, title: "Distance" },
+            showlegend: false,
+          },
+          plotConfig,
+        );
+
+        // Data table
+        const tbody = document.getElementById("dataTableBody");
+        tbody.innerHTML = data.per_step
+          .map(
+            (d) => `
+          <tr>
+            <td>${d.step}</td>
+            <td>${d.sigma.toFixed(4)}</td>
+            <td>${(d.preserve_ratio * 100).toFixed(1)}%</td>
+            <td>${(d.edit_ratio * 100).toFixed(1)}%</td>
+            <td>${d.angle_to_reference.toFixed(1)}\u00b0</td>
+            <td>${d.distance_to_ref.toFixed(4)}</td>
+          </tr>
+        `,
+          )
+          .join("");
+
+        // Step prediction images
+        if (data.step_images && data.step_images.length > 0) {
+          stepImagesData = data.step_images;
+          perStepData = data.per_step;
+          stepSlider.min = 0;
+          stepSlider.max = stepImagesData.length - 1;
+          stepSlider.value = 0;
+          stepImagesSection.style.display = "block";
+          updateStepDisplay(0);
+        } else {
+          stepImagesSection.style.display = "none";
+        }
+
+        // Similarity mask images
+        if (
+          data.similarity_mask_images &&
+          data.similarity_mask_images.length > 0
+        ) {
+          maskImagesData = data.similarity_mask_images;
+          if (
+            data.similarity_heatmap_images &&
+            data.similarity_heatmap_images.length > 0
+          ) {
+            heatmapMaskImagesData = data.similarity_heatmap_images;
+          } else {
+            heatmapMaskImagesData = [];
+          }
+          maskSlider.min = 0;
+          maskSlider.max = maskImagesData.length - 1;
+          maskSlider.value = 0;
+          maskImagesSection.style.display = "block";
+          updateMaskDisplay(0);
+        } else {
+          maskImagesSection.style.display = "none";
+          heatmapMaskImagesData = [];
+        }
+      }
+
+      // =====================================================================
+      // Display: Batch Comparison Results
+      // =====================================================================
+      function displayComparisonResults(results) {
+        batchResults = results;
+        selectedResultIndex = 0;
+
+        currentResultData = {
+          type: "batch",
+          results: results,
+          summary: results[0]?.data?.summary || {},
+        };
+
+        resultsPlaceholder.style.display = "none";
+        resultsContent.classList.add("active");
+
+        // Show history
+        historyPagination.style.display = "flex";
+        if (historyCache.length > 0) {
+          updateHistoryPagination();
+        } else {
+          historyIndex.textContent = "New Result";
+          historyPrevBtn.disabled = true;
+          historyNextBtn.disabled = true;
+        }
+
+        // Show comparison section
+        document.getElementById("comparisonSection").style.display = "block";
+        document.getElementById("rangeScanSection").style.display = "none";
+        document.getElementById("singleResultSection").style.display = "block";
+
+        // Generate comparison cards
+        const comparisonGrid = document.getElementById("comparisonGrid");
+        comparisonGrid.innerHTML = results
+          .map((result, index) => {
+            const preset = result.preset;
+            const data = result.data;
+            const config = preset.config;
+
+            return `
+            <div class="comparison-card ${index === 0 ? "selected" : ""}" data-index="${index}" onclick="selectComparisonResult(${index})">
+              <div class="card-select-hint">Click to view details</div>
+              <img src="data:image/png;base64,${data.generated_image}" alt="${preset.name}" />
+              <div class="comparison-params">
+                <div class="param-row">
+                  <span class="param-name">Config Name</span>
+                  <span class="param-value">${preset.name}</span>
+                </div>
+                <div class="param-row">
+                  <span class="param-name">Total Steps (N)</span>
+                  <span class="param-value">${config.numSteps}</span>
+                </div>
+                <div class="param-row">
+                  <span class="param-name">Intervention Steps (X)</span>
+                  <span class="param-value">${config.interventionSteps}</span>
+                </div>
+                <div class="param-row">
+                  <span class="param-name">Similarity Threshold (Y)</span>
+                  <span class="param-value">${config.similarityThreshold}%</span>
+                </div>
+                <div class="param-row">
+                  <span class="param-name">Weighted Average</span>
+                  <span class="param-value">${config.enableBlend ? `Enabled (${config.blendWeight}%)` : "Disabled"}</span>
+                </div>
+                <div class="param-row">
+                  <span class="param-name">Avg Preserve Ratio</span>
+                  <span class="param-value" style="color: var(--preserve-color)">${(data.summary.mean_preserve_ratio * 100).toFixed(1)}%</span>
+                </div>
+                <div class="param-row">
+                  <span class="param-name">Avg Edit Ratio</span>
+                  <span class="param-value" style="color: var(--edit-color)">${(data.summary.mean_edit_ratio * 100).toFixed(1)}%</span>
+                </div>
+              </div>
+            </div>
+          `;
+          })
+          .join("");
+
+        // Display first result details
+        if (results.length > 0) {
+          displayResultDetails(results[0].data);
+        }
+      }
+
+      function selectComparisonResult(index) {
+        if (index < 0 || index >= batchResults.length) return;
+        selectedResultIndex = index;
+
+        document.querySelectorAll(".comparison-card").forEach((card, i) => {
+          card.classList.toggle("selected", i === index);
+        });
+
+        displayResultDetails(batchResults[index].data);
+      }
+
+      // =====================================================================
+      // Display: Range Scan Results
+      // =====================================================================
+      function displayRangeScanResults(results) {
+        rangeScanResults = results;
+        rangeScanAValues = results.map((r) => r.preset.aValue);
+
+        currentResultData = {
+          type: "rangeScan",
+          results: results,
+          aValues: rangeScanAValues,
+          summary: results[0]?.data?.summary || {},
+        };
+
+        resultsPlaceholder.style.display = "none";
+        resultsContent.classList.add("active");
+
+        // Show history
+        historyPagination.style.display = "flex";
+        if (historyCache.length > 0) {
+          updateHistoryPagination();
+        } else {
+          historyIndex.textContent = "New Result";
+          historyPrevBtn.disabled = true;
+          historyNextBtn.disabled = true;
+        }
+
+        // Show range scan section
+        document.getElementById("comparisonSection").style.display = "none";
+        document.getElementById("rangeScanSection").style.display = "block";
+        document.getElementById("singleResultSection").style.display = "block";
+
+        // Configure scan slider
+        const scanSlider = document.getElementById("scanResultSlider");
+        scanSlider.min = 0;
+        scanSlider.max = results.length - 1;
+        scanSlider.value = 0;
+
+        // Update range labels
+        const scanRangeLabels = document.getElementById("scanRangeLabels");
+        if (rangeScanAValues.length > 0) {
+          scanRangeLabels.innerHTML = `
+            <span>${rangeScanAValues[0]}%</span>
+            <span>${rangeScanAValues[rangeScanAValues.length - 1]}%</span>
+          `;
+        }
+
+        // Display first
+        updateRangeScanDisplay(0);
+      }
+
+      function updateRangeScanDisplay(index) {
+        if (index < 0 || index >= rangeScanResults.length) return;
+
+        const result = rangeScanResults[index];
+        const aValue = rangeScanAValues[index];
+
+        document.getElementById("scanValueIndicator").textContent =
+          `a = ${aValue}%`;
+
+        const scanImage = document.getElementById("scanResultImage");
+        if (result.data.generated_image) {
+          scanImage.src = `data:image/png;base64,${result.data.generated_image}`;
+        }
+
+        const scanStats = document.getElementById("scanStats");
+        const data = result.data;
+        scanStats.innerHTML = `
+          Preserve Ratio: ${(data.summary.mean_preserve_ratio * 100).toFixed(1)}% |
+          Edit Ratio: ${(data.summary.mean_edit_ratio * 100).toFixed(1)}% |
+          Angle: ${data.summary.mean_angle.toFixed(1)}\u00b0
+        `;
+
+        // Also update detail section
+        displayResultDetails(result.data);
+      }
+
+      // =====================================================================
+      // Server-side Save: Concatenated Images
+      // =====================================================================
+      async function downloadConcatenatedImages() {
+        if (rangeScanResults.length === 0) {
+          alert("No scan results to download");
+          return;
+        }
+
+        const images = rangeScanResults.map((r) => r.data.generated_image);
+        const aValues = rangeScanAValues;
+        const prompt = promptInput.value.trim() || "output";
+
+        showLoading("Saving concatenated image to server...");
+
+        try {
+          const res = await fetch(`${API_BASE}/save`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              images: images,
+              prompt: prompt,
+              strength_values: aValues.map(a => a / 100),
+              save_mode: "concat",
+              model_type: selectedModel || "flux"
+            })
+          });
+
+          const data = await res.json();
+          hideLoading();
+
+          if (data.success) {
+            statusBar.textContent = `Concatenated image saved: ${data.saved_paths[0]}`;
+            alert(`Save successful!\nPath: ${data.saved_paths[0]}`);
+          } else {
+            statusBar.textContent = `SaveFailed: ${data.error}`;
+            alert(`SaveFailed: ${data.error}`);
+          }
+        } catch (e) {
+          hideLoading();
+          statusBar.textContent = `SaveFailed: ${e.message}`;
+          alert(`SaveFailed: ${e.message}`);
+        }
+      }
+
+      async function downloadReversedConcatenatedImages() {
+        if (rangeScanResults.length === 0) {
+          alert("No scan results to download");
+          return;
+        }
+
+        const images = rangeScanResults.map((r) => r.data.generated_image);
+        const aValues = rangeScanAValues;
+        const prompt = promptInput.value.trim() || "output";
+
+        showLoading("Saving reversed concatenated image to server...");
+
+        try {
+          const res = await fetch(`${API_BASE}/save`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              images: images,
+              prompt: prompt,
+              strength_values: aValues.map(a => a / 100),
+              save_mode: "reverse_concat",
+              model_type: selectedModel || "flux"
+            })
+          });
+
+          const data = await res.json();
+          hideLoading();
+
+          if (data.success) {
+            statusBar.textContent = `Reversed concatenated image saved: ${data.saved_paths[0]}`;
+            alert(`Save successful!\nPath: ${data.saved_paths[0]}`);
+          } else {
+            statusBar.textContent = `SaveFailed: ${data.error}`;
+            alert(`SaveFailed: ${data.error}`);
+          }
+        } catch (e) {
+          hideLoading();
+          statusBar.textContent = `SaveFailed: ${e.message}`;
+          alert(`SaveFailed: ${e.message}`);
+        }
+      }
+
+      // =====================================================================
+      // Server-side Save: Individual Images
+      // =====================================================================
+      async function downloadIndividualImages() {
+        if (rangeScanResults.length === 0) {
+          alert("No scan results to save");
+          return;
+        }
+
+        const images = rangeScanResults.map((r) => r.data.generated_image);
+        const aValues = rangeScanAValues;
+        const prompt = promptInput.value.trim() || "output";
+
+        showLoading("Saving all individual images to server...");
+
+        try {
+          const res = await fetch(`${API_BASE}/save`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              images: images,
+              prompt: prompt,
+              strength_values: aValues.map(a => a / 100),
+              save_mode: "multiple",
+              model_type: selectedModel || "flux"
+            })
+          });
+
+          const data = await res.json();
+          hideLoading();
+
+          if (data.success) {
+            statusBar.textContent = `Saved ${data.saved_paths.length} images`;
+            alert(`Save successful!\nSaved ${data.saved_paths.length} images\nDirectory: ${data.saved_paths[0].split('/').slice(0, -1).join('/')}`);
+          } else {
+            statusBar.textContent = `SaveFailed: ${data.error}`;
+            alert(`SaveFailed: ${data.error}`);
+          }
+        } catch (e) {
+          hideLoading();
+          statusBar.textContent = `SaveFailed: ${e.message}`;
+          alert(`SaveFailed: ${e.message}`);
+        }
+      }
+
+      // =====================================================================
+      // Initialization
+      // =====================================================================
+      async function init() {
+        try {
+          const res = await fetch(`${API_BASE}/models`);
+          const data = await res.json();
+          const loadedModels = new Set(data.loaded);
+
+          modelSelect.querySelectorAll(".model-btn").forEach((btn) => {
+            const model = btn.dataset.model;
+            btn.disabled = !loadedModels.has(model);
+            btn.onclick = () => selectModel(model, btn);
+          });
+
+          statusBar.textContent = `Loaded analyzers: ${data.loaded.join(", ") || "None"}`;
+        } catch (e) {
+          statusBar.textContent = "Cannot connect to server";
+        }
+      }
+
+      init();
+    </script>
+  </body>
+</html>

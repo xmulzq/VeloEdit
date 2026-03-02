@@ -1,0 +1,33 @@
+# Core dependencies
+torch==2.6.0
+torchvision==0.21.0
+numpy==1.26.4
+pillow==10.4.0
+
+# Diffusion models
+diffusers==0.36.0
+transformers==5.0.0
+accelerate==1.4.0
+safetensors==0.6.2
+
+# LoRA support
+peft==0.18.0
+
+# Configuration
+ml-collections==1.1.0
+
+# Web server
+flask==3.1.2
+flask-cors==6.0.2
+
+# Visualization
+matplotlib==3.10.0
+
+# Progress bars
+tqdm==4.67.1
+
+# Distributed training (optional)
+# torch.distributed is included in torch
+
+# Optional: For better performance
+# xformers>=0.0.22  # Uncomment for memory-efficient attention
