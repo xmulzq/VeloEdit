@@ -41,7 +41,7 @@ env/
 *.ckpt
 *.safetensors
 output/
-results/
+# results/
 benchmark_outputs/
 benchmark_outputs_*/
 benchmark_intervention_outputs_*/

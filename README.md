@@ -2,6 +2,12 @@
 
 VeloEdit is a tool for analyzing and intervening in the velocity field of diffusion models, supporting FLUX.1-Kontext and Qwen-Image-Edit models. By decomposing velocity vectors into preserve and edit components, VeloEdit enables precise control over the image editing process for more controllable image generation. You can access the project at [VeloEdit](https://xmulzq.github.io/VeloEdit).
 
+## Results Visualization
+
+|![Add flowers to the helmet](results/flux/Add%20flowers%20to%20the%20helmet_20260302_195350.gif)|![Turn the horse into a bronze horse](results/flux/Turn%20the%20horse%20into%20a%20bronze%20horse_20260302_193455.gif)|![Turn into a simple line drawing](results/flux/Turn%20into%20a%20simple%20line%20drawing_20260302_220156.gif)|
+|:--:|:--:|:--:|
+|***Add flowers to the helmet***|***Turn the horse into a bronze horse***|***Turn into a simple line drawing***|
+
 ## Core Features
 
 - **Velocity Field Decomposition**: Decomposes diffusion model velocity vectors into preserve and edit components
@@ -94,3 +100,4 @@ Run PIEbench benchmark:
 ```bash
 bash benchmark_infer.sh 
 ```
+
