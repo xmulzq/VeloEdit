@@ -1,0 +1,16 @@
+analyzers/qwen.py
+  h_d46f5e0489439b 76-81,98,100,103-104,108,118-121,128,132,136-137,144-145,151-153,176-178,310-311,315-316,321-326,330-332
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "ba93b53eb2e8b5ebb936008ae83989bf75641d7b",
+  "prompts": {},
+  "humans": {
+    "h_d46f5e0489439b": {
+      "author": "xmulzq <hqulzq@gmail.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
