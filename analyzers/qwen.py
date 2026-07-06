@@ -73,8 +73,12 @@ class QwenVelocityAnalyzer(BaseVelocityAnalyzer):
         max_area: int,
         aspect_ratio: float,
     ) -> Tuple[int, int]:
-        width = int(np.sqrt(max_area * aspect_ratio))
-        height = int(np.sqrt(max_area / aspect_ratio))
+        width = np.sqrt(max_area * aspect_ratio)
+        height = width / aspect_ratio
+
+        width = round(width / 32) * 32
+        height = round(height / 32) * 32
+
         return width, height
 
     def _get_qwen_prompt_embeds(
@@ -83,7 +87,6 @@ class QwenVelocityAnalyzer(BaseVelocityAnalyzer):
         image: Optional[List[Image.Image]] = None,
         device: torch.device = None,
         dtype: torch.dtype = None,
-        max_seq_len: int = 1024,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         device = device or self._get_execution_device()
         dtype = dtype or self.pipeline.text_encoder.dtype
@@ -91,18 +94,18 @@ class QwenVelocityAnalyzer(BaseVelocityAnalyzer):
         prompt = [prompt] if isinstance(prompt, str) else prompt
 
         img_prompt_template = "Picture {}: <|vision_start|><|image_pad|><|vision_end|>"
-        base_img_prompt_list = []
         if isinstance(image, list):
+            base_img_prompt = ""
             for i, img in enumerate(image):
-                base_img_prompt = img_prompt_template.format(i + 1)
-                base_img_prompt_list.append(base_img_prompt)
+                base_img_prompt += img_prompt_template.format(i + 1)
         elif image is not None:
             base_img_prompt = img_prompt_template.format(1)
-            base_img_prompt_list.append(base_img_prompt)
+        else:
+            base_img_prompt = ""
 
         template = self.pipeline.prompt_template_encode
         drop_idx = self.pipeline.prompt_template_encode_start_idx
-        txt = [template.format(base_img_prompt + e) for base_img_prompt, e in zip(base_img_prompt_list, prompt)]
+        txt = [template.format(base_img_prompt + e) for e in prompt]
 
         model_inputs = self.pipeline.processor(
             text=txt,
@@ -112,35 +115,42 @@ class QwenVelocityAnalyzer(BaseVelocityAnalyzer):
         ).to(device)
 
         outputs = self.pipeline.text_encoder(
-            input_ids=model_inputs.input_ids,
-            attention_mask=model_inputs.attention_mask,
-            pixel_values=model_inputs.pixel_values,
-            image_grid_thw=model_inputs.image_grid_thw,
+            input_ids=model_inputs["input_ids"],
+            attention_mask=model_inputs["attention_mask"],
+            pixel_values=model_inputs.get("pixel_values"),
+            image_grid_thw=model_inputs.get("image_grid_thw"),
             output_hidden_states=True,
         )
 
         hidden_states = outputs.hidden_states[-1]
-        split_hidden_states = self.pipeline._extract_masked_hidden(hidden_states, model_inputs.attention_mask)
+        split_hidden_states = self.pipeline._extract_masked_hidden(
+            hidden_states,
+            model_inputs["attention_mask"],
+        )
         split_hidden_states = [e[drop_idx:] for e in split_hidden_states]
         attn_mask_list = [torch.ones(e.size(0), dtype=torch.long, device=e.device) for e in split_hidden_states]
+        max_seq_len = max(e.size(0) for e in split_hidden_states)
 
         prompt_embeds = torch.stack([
             torch.cat([
-                u[:max_seq_len] if u.size(0) > max_seq_len else u,
-                u.new_zeros(max(0, max_seq_len - u.size(0)), u.size(1))
+                u,
+                u.new_zeros(max_seq_len - u.size(0), u.size(1))
             ])
             for u in split_hidden_states
         ])
 
         encoder_attention_mask = torch.stack([
             torch.cat([
-                u[:max_seq_len] if u.size(0) > max_seq_len else u,
-                u.new_zeros(max(0, max_seq_len - u.size(0)))
+                u,
+                u.new_zeros(max_seq_len - u.size(0))
             ])
             for u in attn_mask_list
         ])
 
         prompt_embeds = prompt_embeds.to(dtype=dtype, device=device)
+        if encoder_attention_mask.all():
+            encoder_attention_mask = None
+
         return prompt_embeds, encoder_attention_mask
 
     def _prepare_inputs(
@@ -158,21 +168,15 @@ class QwenVelocityAnalyzer(BaseVelocityAnalyzer):
 
         device = self._get_execution_device()
         batch_size = 1
-        max_sequence_length = 256
         negative_prompt = " "
 
         original_width, original_height = image.size
         aspect_ratio = original_width / original_height
 
-        height = original_height
-        width = original_width
-        max_area = 1024 ** 2
-
-        current_area = height * width
-
-        scale = (max_area / current_area) ** 0.5
-        width = round(width * scale)
-        height = round(height * scale)
+        width, height = self._calculate_dimensions(
+            VAE_IMAGE_SIZE,
+            aspect_ratio,
+        )
 
         multiple_of = self.pipeline.vae_scale_factor * 2
         width = width // multiple_of * multiple_of
@@ -196,7 +200,6 @@ class QwenVelocityAnalyzer(BaseVelocityAnalyzer):
             prompt=prompt,
             image=condition_images,
             device=device,
-            max_seq_len=max_sequence_length,
         )
 
         true_cfg_scale = getattr(self.config.sampling, "true_cfg_scale", 4.0)
@@ -209,7 +212,6 @@ class QwenVelocityAnalyzer(BaseVelocityAnalyzer):
                 prompt=negative_prompt,
                 image=condition_images,
                 device=device,
-                max_seq_len=max_sequence_length,
             )
 
         num_channels_latents = self.pipeline.transformer.config.in_channels // 4
@@ -235,9 +237,6 @@ class QwenVelocityAnalyzer(BaseVelocityAnalyzer):
                 (1, height // self.pipeline.vae_scale_factor // 2, width // self.pipeline.vae_scale_factor // 2),
             ]
         ] * batch_size
-
-        txt_seq_lens = [max_sequence_length] * batch_size
-        negative_txt_seq_lens = [max_sequence_length] * batch_size
 
         transformer_dtype = self.pipeline.transformer.dtype
         latents = latents.to(dtype=transformer_dtype)
@@ -308,32 +307,32 @@ class QwenVelocityAnalyzer(BaseVelocityAnalyzer):
                 [latent_model_input.shape[0]], sigma, device=z.device, dtype=torch.float32
             )
 
-            noise_pred = self.pipeline.transformer(
-                hidden_states=latent_model_input,
-                timestep=timesteps_input,
-                guidance=guidance,
-                encoder_hidden_states_mask=prompt_embeds_mask,
-                encoder_hidden_states=prompt_embeds,
-                img_shapes=img_shapes,
-                txt_seq_lens=txt_seq_lens,
-                attention_kwargs={},
-                return_dict=False,
-            )[0]
-
-            noise_pred = noise_pred[:, : latents.size(1)]
-
-            if do_true_cfg:
-                noise_pred_negative = self.pipeline.transformer(
+            with self.pipeline.transformer.cache_context("cond"):
+                noise_pred = self.pipeline.transformer(
                     hidden_states=latent_model_input,
                     timestep=timesteps_input,
                     guidance=guidance,
-                    encoder_hidden_states=negative_prompt_embeds,
-                    encoder_hidden_states_mask=negative_prompt_embeds_mask,
-                    txt_seq_lens=negative_txt_seq_lens,
+                    encoder_hidden_states_mask=prompt_embeds_mask,
+                    encoder_hidden_states=prompt_embeds,
                     img_shapes=img_shapes,
                     attention_kwargs={},
                     return_dict=False,
                 )[0]
+
+            noise_pred = noise_pred[:, : latents.size(1)]
+
+            if do_true_cfg:
+                with self.pipeline.transformer.cache_context("uncond"):
+                    noise_pred_negative = self.pipeline.transformer(
+                        hidden_states=latent_model_input,
+                        timestep=timesteps_input,
+                        guidance=guidance,
+                        encoder_hidden_states=negative_prompt_embeds,
+                        encoder_hidden_states_mask=negative_prompt_embeds_mask,
+                        img_shapes=img_shapes,
+                        attention_kwargs={},
+                        return_dict=False,
+                    )[0]
                 noise_pred_negative = noise_pred_negative[:, : latents.size(1)]
 
                 comb_pred = noise_pred_negative + true_cfg_scale * (noise_pred - noise_pred_negative)
