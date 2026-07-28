@@ -15,7 +15,6 @@ VeloEdit is a tool for analyzing and intervening in the velocity field of diffus
 - **Multi-model Support**: Supports FLUX.1-Kontext and Qwen-Image-Edit-2509 models
 - **Visualization Analysis**: Generates step-by-step predicted images, similarity masks, and heatmaps
 - **Web Interface**: Provides an interactive web server with real-time parameter adjustment and batch processing
-- **LoRA Support**: FLUX model supports loading LoRA weights
 
 ## Project Structure
 
@@ -65,11 +64,12 @@ Launch the interactive web interface:
 # Load FLUX model only (GPU 0)
 python -m VeloEdit.server.app --models flux:0 --port 5001
 
+# Load Qwen model only (GPU 0)
+python -m VeloEdit.server.app --models qwen:0 --port 5001
+
 # Load both FLUX and Qwen models (multi-GPU)
 python -m VeloEdit.server.app --models flux:0 qwen:0,1 --port 5001
 
-# Load FLUX model with LoRA
-python -m VeloEdit.server.app --models flux:0 --port 5001 --lora /path/to/lora.safetensors
 ```
 
 Access `http://localhost:5001` to open the web interface.

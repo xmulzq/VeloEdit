@@ -8,6 +8,7 @@ from ..core.types import AnalysisResult
 
 
 class AnalyzerWrapper:
+    """Small adapter that gives Flask a uniform analyzer interface."""
 
     def __init__(self, analyzer, model_type: str):
         self.analyzer = analyzer
@@ -32,11 +33,13 @@ def create_analyzer(
     model_spec: str,
     lora_path: Optional[str] = None,
 ) -> AnalyzerWrapper:
+    # model_spec format is "model:gpus", for example "flux:0" or "qwen:0,1".
     parts = model_spec.split(":")
     model_type = parts[0]
     gpu_ids = parts[1] if len(parts) > 1 else "0"
 
     if "," in gpu_ids:
+        # Qwen can use diffusers device_map across multiple GPUs; FLUX still binds to the first id.
         device = f"cuda:{gpu_ids.split(',')[0]}"
         multi_gpu = True
     else:
@@ -57,6 +60,7 @@ def create_analyzer(
             lora_path=lora_path,
         )
     elif model_type in ["qwen", "qwen_single"]:
+        # qwen_single keeps the frontend model name "qwen" while forcing single-device loading.
         use_multi_gpu = multi_gpu if model_type == "qwen" else False
         analyzer = QwenVelocityAnalyzer(
             config=config,

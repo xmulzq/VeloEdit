@@ -1,0 +1,257 @@
+{
+  "model": "flux",
+  "image": "/mnt/bn/image-data-lf/zongqing/VeloEdit/assets/hourse.png",
+  "prompt": "Turn the horse into a bronze horse",
+  "strengths": [
+    0.0,
+    0.05,
+    0.1,
+    0.15,
+    0.2,
+    0.25,
+    0.3,
+    0.35,
+    0.4,
+    0.45,
+    0.5,
+    0.55,
+    0.6,
+    0.65,
+    0.7,
+    0.75,
+    0.8,
+    0.85,
+    0.9,
+    0.95,
+    1.0
+  ],
+  "seed": 42,
+  "steps": 30,
+  "preserve_steps": 1,
+  "edit_steps": 1,
+  "threshold": 0.8,
+  "similarity_mode": "elementwise",
+  "enable_interv": true,
+  "outputs": {
+    "0.00": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn the horse into a bronze horse_20260728_150335/Turn the horse into a bronze horse_strength0.00.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 68596,
+      "edit_interventions_applied": 193548,
+      "inference_time_sec": 46.1424794299528,
+      "velocity_intervention_time_sec": 0.07458308525383472,
+      "velocity_intervention_time_ratio": 0.0016163649239321126
+    },
+    "0.05": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn the horse into a bronze horse_20260728_150335/Turn the horse into a bronze horse_strength0.05.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 68596,
+      "edit_interventions_applied": 193548,
+      "inference_time_sec": 45.19602455385029,
+      "velocity_intervention_time_sec": 0.00675539206713438,
+      "velocity_intervention_time_ratio": 0.00014946872283170493
+    },
+    "0.10": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn the horse into a bronze horse_20260728_150335/Turn the horse into a bronze horse_strength0.10.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 68596,
+      "edit_interventions_applied": 193548,
+      "inference_time_sec": 45.175090798176825,
+      "velocity_intervention_time_sec": 0.0068275211378932,
+      "velocity_intervention_time_ratio": 0.00015113464117638795
+    },
+    "0.15": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn the horse into a bronze horse_20260728_150335/Turn the horse into a bronze horse_strength0.15.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 68596,
+      "edit_interventions_applied": 193548,
+      "inference_time_sec": 45.18552221683785,
+      "velocity_intervention_time_sec": 0.006254100706428289,
+      "velocity_intervention_time_ratio": 0.0001384093930886954
+    },
+    "0.20": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn the horse into a bronze horse_20260728_150335/Turn the horse into a bronze horse_strength0.20.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 68596,
+      "edit_interventions_applied": 193548,
+      "inference_time_sec": 45.159140408970416,
+      "velocity_intervention_time_sec": 0.007302846293896437,
+      "velocity_intervention_time_ratio": 0.00016171358063418316
+    },
+    "0.25": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn the horse into a bronze horse_20260728_150335/Turn the horse into a bronze horse_strength0.25.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 68596,
+      "edit_interventions_applied": 193548,
+      "inference_time_sec": 45.16924113407731,
+      "velocity_intervention_time_sec": 0.007458948530256748,
+      "velocity_intervention_time_ratio": 0.00016513335940526678
+    },
+    "0.30": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn the horse into a bronze horse_20260728_150335/Turn the horse into a bronze horse_strength0.30.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 68596,
+      "edit_interventions_applied": 193548,
+      "inference_time_sec": 45.16155213909224,
+      "velocity_intervention_time_sec": 0.007022760808467865,
+      "velocity_intervention_time_ratio": 0.00015550308782210569
+    },
+    "0.35": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn the horse into a bronze horse_20260728_150335/Turn the horse into a bronze horse_strength0.35.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 68596,
+      "edit_interventions_applied": 193548,
+      "inference_time_sec": 45.14716019527987,
+      "velocity_intervention_time_sec": 0.006672370247542858,
+      "velocity_intervention_time_ratio": 0.0001477915824313675
+    },
+    "0.40": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn the horse into a bronze horse_20260728_150335/Turn the horse into a bronze horse_strength0.40.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 68596,
+      "edit_interventions_applied": 193548,
+      "inference_time_sec": 45.13791912002489,
+      "velocity_intervention_time_sec": 0.006156414747238159,
+      "velocity_intervention_time_ratio": 0.00013639119541305884
+    },
+    "0.45": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn the horse into a bronze horse_20260728_150335/Turn the horse into a bronze horse_strength0.45.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 68596,
+      "edit_interventions_applied": 193548,
+      "inference_time_sec": 45.144768639001995,
+      "velocity_intervention_time_sec": 0.006831080187112093,
+      "velocity_intervention_time_ratio": 0.00015131498937864766
+    },
+    "0.50": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn the horse into a bronze horse_20260728_150335/Turn the horse into a bronze horse_strength0.50.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 68596,
+      "edit_interventions_applied": 193548,
+      "inference_time_sec": 45.16668187407777,
+      "velocity_intervention_time_sec": 0.006891675293445587,
+      "velocity_intervention_time_ratio": 0.00015258316545499622
+    },
+    "0.55": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn the horse into a bronze horse_20260728_150335/Turn the horse into a bronze horse_strength0.55.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 68596,
+      "edit_interventions_applied": 193548,
+      "inference_time_sec": 45.13791288807988,
+      "velocity_intervention_time_sec": 0.006955093238502741,
+      "velocity_intervention_time_ratio": 0.0001540853972523718
+    },
+    "0.60": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn the horse into a bronze horse_20260728_150335/Turn the horse into a bronze horse_strength0.60.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 68596,
+      "edit_interventions_applied": 193548,
+      "inference_time_sec": 45.14247157704085,
+      "velocity_intervention_time_sec": 0.007015748880803585,
+      "velocity_intervention_time_ratio": 0.00015541348614088173
+    },
+    "0.65": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn the horse into a bronze horse_20260728_150335/Turn the horse into a bronze horse_strength0.65.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 68596,
+      "edit_interventions_applied": 193548,
+      "inference_time_sec": 45.12949456786737,
+      "velocity_intervention_time_sec": 0.006332916673272848,
+      "velocity_intervention_time_ratio": 0.00014032766672689362
+    },
+    "0.70": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn the horse into a bronze horse_20260728_150335/Turn the horse into a bronze horse_strength0.70.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 68596,
+      "edit_interventions_applied": 193548,
+      "inference_time_sec": 45.13879335485399,
+      "velocity_intervention_time_sec": 0.007065384648740292,
+      "velocity_intervention_time_ratio": 0.00015652577580433966
+    },
+    "0.75": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn the horse into a bronze horse_20260728_150335/Turn the horse into a bronze horse_strength0.75.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 68596,
+      "edit_interventions_applied": 193548,
+      "inference_time_sec": 45.16734107537195,
+      "velocity_intervention_time_sec": 0.006584792397916317,
+      "velocity_intervention_time_ratio": 0.00014578658475662974
+    },
+    "0.80": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn the horse into a bronze horse_20260728_150335/Turn the horse into a bronze horse_strength0.80.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 68596,
+      "edit_interventions_applied": 193548,
+      "inference_time_sec": 45.14437261829153,
+      "velocity_intervention_time_sec": 0.0064384592697024345,
+      "velocity_intervention_time_ratio": 0.00014261930992244445
+    },
+    "0.85": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn the horse into a bronze horse_20260728_150335/Turn the horse into a bronze horse_strength0.85.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 68596,
+      "edit_interventions_applied": 193548,
+      "inference_time_sec": 45.20767072075978,
+      "velocity_intervention_time_sec": 0.009806508664041758,
+      "velocity_intervention_time_ratio": 0.00021692134338473047
+    },
+    "0.90": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn the horse into a bronze horse_20260728_150335/Turn the horse into a bronze horse_strength0.90.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 68596,
+      "edit_interventions_applied": 193548,
+      "inference_time_sec": 45.22017956338823,
+      "velocity_intervention_time_sec": 0.010327433701604605,
+      "velocity_intervention_time_ratio": 0.0002283810856418191
+    },
+    "0.95": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn the horse into a bronze horse_20260728_150335/Turn the horse into a bronze horse_strength0.95.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 68596,
+      "edit_interventions_applied": 193548,
+      "inference_time_sec": 45.254112486727536,
+      "velocity_intervention_time_sec": 0.010009976103901863,
+      "velocity_intervention_time_ratio": 0.00022119483852075684
+    },
+    "1.00": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn the horse into a bronze horse_20260728_150335/Turn the horse into a bronze horse_strength1.00.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 68596,
+      "edit_interventions_applied": 193548,
+      "inference_time_sec": 45.21430008998141,
+      "velocity_intervention_time_sec": 0.00874239532276988,
+      "velocity_intervention_time_ratio": 0.0001933546534032719
+    }
+  },
+  "compare_artifacts": [
+    "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn the horse into a bronze horse_20260728_150335/compare.png",
+    "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn the horse into a bronze horse_20260728_150335/compare.gif"
+  ],
+  "root_gif": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn the horse into a bronze horse_20260728_150335.gif",
+  "timing_summary": {
+    "mean_inference_time_sec": 45.21629664055737,
+    "mean_velocity_intervention_time_sec": 0.010573090674976507,
+    "mean_velocity_intervention_time_ratio": 0.00023240089443441267
+  }
+}

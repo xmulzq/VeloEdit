@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, List, Any, Optional, Tuple
 import torch
 import numpy as np
+import time
 from PIL import Image
 from ml_collections import ConfigDict
 
@@ -14,9 +15,16 @@ from ..core.types import (
 )
 from ..core.sampler import run_deterministic_sampling
 from ..core.decomposer import VelocityDecomposer
+try:
+    from matplotlib import colormaps
+    get_cmap = colormaps.get_cmap
+except ImportError:
+    import matplotlib.cm as cm
+    get_cmap = cm.get_cmap
 
 
 class BaseVelocityAnalyzer(ABC):
+    """Shared analysis template; subclasses only provide model-specific I/O."""
 
     def __init__(
         self,
@@ -29,6 +37,10 @@ class BaseVelocityAnalyzer(ABC):
         self.decomposer = VelocityDecomposer(save_tensors=save_tensors)
         self.pipeline = None
         self.model_loaded = False
+
+    def _synchronize_device(self) -> None:
+        if torch.cuda.is_available() and str(self.device).startswith("cuda"):
+            torch.cuda.synchronize(torch.device(self.device))
 
     @abstractmethod
     def load_model(self) -> None:
@@ -60,6 +72,7 @@ class BaseVelocityAnalyzer(ABC):
         if intervention_config is None:
             return InterventionConfig()
 
+        # Keep external API field names stable while core code uses a typed dataclass.
         return InterventionConfig(
             preserve_steps=intervention_config.get("preserve_intervention_steps", 0),
             edit_steps=intervention_config.get("edit_intervention_steps", 0),
@@ -67,6 +80,8 @@ class BaseVelocityAnalyzer(ABC):
             similarity_mode=intervention_config.get("similarity_mode", "elementwise"),
             enable_interv=intervention_config.get("enable_interv", True),
             blend_weight=intervention_config.get("blend_weight", 0.5),
+            gt_mask=intervention_config.get("gt_mask"),
+            gt_mask_size=intervention_config.get("gt_mask_size"),
         )
 
     def _convert_masks_to_images(
@@ -86,6 +101,8 @@ class BaseVelocityAnalyzer(ABC):
         for mask in masks:
             mask_np = mask[0].numpy()
 
+            # Masks may be [tokens, channels] or already flattened; average channels
+            # only for visualization, never for the intervention decision itself.
             if len(mask_np.shape) > 1:
                 mask_avg = mask_np.mean(axis=-1)
             else:
@@ -94,6 +111,7 @@ class BaseVelocityAnalyzer(ABC):
             try:
                 mask_2d = mask_avg.reshape(latent_h, latent_w)
             except ValueError:
+                # Some packed sequence latents use a half-resolution token grid.
                 packed_h = latent_h // 2
                 packed_w = latent_w // 2
                 if len(mask_avg) == packed_h * packed_w:
@@ -131,11 +149,12 @@ class BaseVelocityAnalyzer(ABC):
         heatmap_images = []
         latent_h = target_height // vae_scale_factor
         latent_w = target_width // vae_scale_factor
-        cmap = cm.get_cmap(colormap)
+        cmap = get_cmap(colormap)
 
         for mask in masks:
             mask_np = mask[0].numpy()
 
+            # Mirror _convert_masks_to_images so mask and heatmap views stay aligned.
             if len(mask_np.shape) > 1:
                 mask_avg = mask_np.mean(axis=-1)
             else:
@@ -171,8 +190,12 @@ class BaseVelocityAnalyzer(ABC):
         intervention_config: Optional[Dict] = None,
     ) -> AnalysisResult:
         if not self.model_loaded:
+            # CLI creates analyzers lazily, while the server may preload them.
             self.load_model()
             self.model_loaded = True
+
+        self._synchronize_device()
+        inference_start = time.perf_counter()
 
         num_inference_steps = self.config.sampling.num_inference_steps
         if intervention_config and "num_inference_steps" in intervention_config:
@@ -184,7 +207,12 @@ class BaseVelocityAnalyzer(ABC):
 
         config = self._parse_intervention_config(intervention_config)
 
+        # Subclasses return the common sampler contract: latents, sigma schedule,
+        # reference latent, v_pred_fn, working size, and optional original size.
         inputs = self._prepare_inputs(image, prompt, num_inference_steps, seed)
+        config.gt_target_height = inputs['height']
+        config.gt_target_width = inputs['width']
+        config.gt_vae_scale_factor = getattr(self.pipeline, 'vae_scale_factor', 8)
 
         with torch.no_grad():
             sampling_result = run_deterministic_sampling(
@@ -206,6 +234,7 @@ class BaseVelocityAnalyzer(ABC):
         need_resize = (original_width != inputs['width'] or original_height != inputs['height'])
 
         if need_resize:
+            # Sampling may run at benchmark-aligned resolution; API results keep input size.
             generated_image = generated_image.resize(
                 (original_width, original_height),
                 Image.Resampling.LANCZOS
@@ -215,6 +244,7 @@ class BaseVelocityAnalyzer(ABC):
         print(f"[Step Images] Decoding {len(sampling_result.step_pred_x0)} step predictions...")
         step_images = []
         for x0_pred in sampling_result.step_pred_x0:
+            # x0_pred uses the same latent layout as final latents, so reuse model decode.
             step_img = self._decode_latents(
                 x0_pred.to(self.device),
                 inputs['height'],
@@ -266,6 +296,14 @@ class BaseVelocityAnalyzer(ABC):
             print(f"[Similarity Heatmaps] Generated {len(heatmap_images)} heatmap images")
 
         summary = VelocityDecomposer.compute_summary(decompositions)
+        self._synchronize_device()
+        inference_time_sec = time.perf_counter() - inference_start
+        velocity_intervention_time_sec = sampling_result.velocity_intervention_time_sec
+        velocity_intervention_time_ratio = (
+            velocity_intervention_time_sec / inference_time_sec
+            if inference_time_sec > 0
+            else 0.0
+        )
 
         return AnalysisResult(
             image_path=image_path,
@@ -282,6 +320,9 @@ class BaseVelocityAnalyzer(ABC):
             interventions_applied=sampling_result.interventions_applied,
             preserve_interventions_applied=sampling_result.preserve_interventions_applied,
             edit_interventions_applied=sampling_result.edit_interventions_applied,
+            inference_time_sec=inference_time_sec,
+            velocity_intervention_time_sec=velocity_intervention_time_sec,
+            velocity_intervention_time_ratio=velocity_intervention_time_ratio,
         )
 
     def analyze_batch(

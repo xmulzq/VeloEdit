@@ -6,7 +6,7 @@ from PIL import Image
 from ml_collections import ConfigDict
 
 from .base import BaseVelocityAnalyzer
-from ..core.sampler import align_first_step_to_six_step, log_sampling_schedule
+from ..core.sampler import align_first_step_to_reference_step, log_sampling_schedule
 
 
 CONDITION_IMAGE_SIZE = 384 * 384
@@ -14,6 +14,7 @@ VAE_IMAGE_SIZE = 1024 * 1024
 
 
 class QwenVelocityAnalyzer(BaseVelocityAnalyzer):
+    """Qwen-Image-Edit adapter with optional balanced multi-GPU loading."""
 
     def __init__(
         self,
@@ -65,6 +66,7 @@ class QwenVelocityAnalyzer(BaseVelocityAnalyzer):
 
     def _get_execution_device(self) -> torch.device:
         if self.multi_gpu:
+            # In device_map mode diffusers tracks the active execution device internally.
             return self.pipeline._execution_device
         return torch.device(self.device)
 
@@ -73,6 +75,7 @@ class QwenVelocityAnalyzer(BaseVelocityAnalyzer):
         max_area: int,
         aspect_ratio: float,
     ) -> Tuple[int, int]:
+        """Calculate Qwen-friendly dimensions while preserving aspect ratio."""
         width = np.sqrt(max_area * aspect_ratio)
         height = width / aspect_ratio
 
@@ -103,6 +106,7 @@ class QwenVelocityAnalyzer(BaseVelocityAnalyzer):
         else:
             base_img_prompt = ""
 
+        # Qwen text encoding expects image placeholders to be embedded in the prompt.
         template = self.pipeline.prompt_template_encode
         drop_idx = self.pipeline.prompt_template_encode_start_idx
         txt = [template.format(base_img_prompt + e) for e in prompt]
@@ -127,10 +131,12 @@ class QwenVelocityAnalyzer(BaseVelocityAnalyzer):
             hidden_states,
             model_inputs["attention_mask"],
         )
+        # Remove template prefix tokens so sampler conditioning aligns with edit text.
         split_hidden_states = [e[drop_idx:] for e in split_hidden_states]
         attn_mask_list = [torch.ones(e.size(0), dtype=torch.long, device=e.device) for e in split_hidden_states]
         max_seq_len = max(e.size(0) for e in split_hidden_states)
 
+        # Pad variable-length prompt embeddings because transformer forward expects a batch tensor.
         prompt_embeds = torch.stack([
             torch.cat([
                 u,
@@ -182,6 +188,8 @@ class QwenVelocityAnalyzer(BaseVelocityAnalyzer):
         width = width // multiple_of * multiple_of
         height = height // multiple_of * multiple_of
 
+        # Qwen uses a lower-resolution image for visual-language conditioning and
+        # a separate 1024^2-area image for VAE latents.
         condition_width, condition_height = self._calculate_dimensions(
             CONDITION_IMAGE_SIZE, aspect_ratio
         )
@@ -205,6 +213,7 @@ class QwenVelocityAnalyzer(BaseVelocityAnalyzer):
         true_cfg_scale = getattr(self.config.sampling, "true_cfg_scale", 4.0)
         do_true_cfg = true_cfg_scale > 1 and negative_prompt is not None
 
+        # True CFG needs a separate unconditional text/image encoding path.
         negative_prompt_embeds = None
         negative_prompt_embeds_mask = None
         if do_true_cfg:
@@ -216,7 +225,9 @@ class QwenVelocityAnalyzer(BaseVelocityAnalyzer):
 
         num_channels_latents = self.pipeline.transformer.config.in_channels // 4
 
-        generator = torch.Generator(device=device).manual_seed(seed)
+        # Match diffusers examples/tests that pass torch.manual_seed(seed), which
+        # is a CPU generator and produces different latents from a CUDA generator.
+        generator = torch.Generator(device="cpu").manual_seed(seed)
         print(f"[Seed] Using random seed: {seed}")
 
         latents, image_latents = self.pipeline.prepare_latents(
@@ -243,6 +254,7 @@ class QwenVelocityAnalyzer(BaseVelocityAnalyzer):
         if image_latents is not None:
             image_latents = image_latents.to(dtype=transformer_dtype)
 
+        # Use the encoded source-image latent as the intervention reference.
         reference_latent = image_latents.clone() if image_latents is not None else latents.clone()
 
         requested_num_inference_steps = num_inference_steps
@@ -263,30 +275,43 @@ class QwenVelocityAnalyzer(BaseVelocityAnalyzer):
             mu=mu,
         )
         raw_sigma_schedule = self.pipeline.scheduler.sigmas.float().clone()
-        sigma_schedule_6 = None
+        first_step_align_steps = int(
+            getattr(self.config.sampling, "first_step_align_steps", 6)
+        )
+        reference_sigma_schedule = None
         sigma_schedule = raw_sigma_schedule
 
-        if requested_num_inference_steps > 6:
-            sigmas_6 = np.linspace(1.0, 1 / 6, 6)
+        if (
+            first_step_align_steps > 0
+            and requested_num_inference_steps > first_step_align_steps
+        ):
+            reference_sigmas = np.linspace(
+                1.0,
+                1 / first_step_align_steps,
+                first_step_align_steps,
+            )
             retrieve_timesteps(
                 self.pipeline.scheduler,
-                6,
+                first_step_align_steps,
                 device,
-                sigmas=sigmas_6,
+                sigmas=reference_sigmas,
                 mu=mu,
             )
-            sigma_schedule_6 = self.pipeline.scheduler.sigmas.float().clone()
-            sigma_schedule = align_first_step_to_six_step(
+            reference_sigma_schedule = self.pipeline.scheduler.sigmas.float().clone()
+            sigma_schedule = align_first_step_to_reference_step(
                 raw_sigma_schedule,
-                sigma_schedule_6,
+                reference_sigma_schedule,
+                first_step_align_steps,
             )
 
+        # Log the effective schedule because Qwen outputs are sensitive to the first step.
         log_sampling_schedule(
             "Qwen",
             requested_num_inference_steps,
             raw_sigma_schedule,
             sigma_schedule,
-            sigma_schedule_6,
+            reference_sigma_schedule,
+            first_step_align_steps,
         )
 
         guidance_scale = self.config.sampling.guidance_scale
@@ -299,12 +324,19 @@ class QwenVelocityAnalyzer(BaseVelocityAnalyzer):
             guidance = None
 
         def v_pred_fn(z, sigma):
+            # Concatenate generated and condition-image tokens exactly as the pipeline does.
             latent_model_input = z
             if image_latents is not None:
                 latent_model_input = torch.cat([z, image_latents], dim=1)
 
-            timesteps_input = torch.full(
-                [latent_model_input.shape[0]], sigma, device=z.device, dtype=torch.float32
+            train_timesteps = self.pipeline.scheduler.config.get("num_train_timesteps", 1000)
+            sigma_tensor = torch.as_tensor(sigma, device=z.device, dtype=torch.float32)
+            # Qwen transformer receives normalized timesteps derived from sigma.
+            timesteps_input = (
+                (sigma_tensor * train_timesteps)
+                .expand(latent_model_input.shape[0])
+                .to(dtype=z.dtype)
+                / train_timesteps
             )
 
             with self.pipeline.transformer.cache_context("cond"):
@@ -319,6 +351,7 @@ class QwenVelocityAnalyzer(BaseVelocityAnalyzer):
                     return_dict=False,
                 )[0]
 
+            # Only generated-token velocity participates in sampling/intervention.
             noise_pred = noise_pred[:, : latents.size(1)]
 
             if do_true_cfg:
@@ -337,6 +370,7 @@ class QwenVelocityAnalyzer(BaseVelocityAnalyzer):
 
                 comb_pred = noise_pred_negative + true_cfg_scale * (noise_pred - noise_pred_negative)
 
+                # Rescale true-CFG output to preserve the conditional prediction norm.
                 cond_norm = torch.norm(noise_pred, dim=-1, keepdim=True)
                 noise_norm = torch.norm(comb_pred, dim=-1, keepdim=True)
                 noise_pred = comb_pred * (cond_norm / noise_norm)
@@ -368,10 +402,12 @@ class QwenVelocityAnalyzer(BaseVelocityAnalyzer):
         vae_dtype = self.pipeline.vae.dtype
         latents = latents.to(device=device, dtype=vae_dtype)
 
+        # Qwen latents are packed token sequences before VAE decoding.
         latents = self.pipeline._unpack_latents(
             latents, height, width, self.pipeline.vae_scale_factor
         )
 
+        # Apply Qwen VAE normalization constants before decoding.
         latents_mean = (
             torch.tensor(self.pipeline.vae.config.latents_mean)
             .view(1, self.pipeline.vae.config.z_dim, 1, 1, 1)

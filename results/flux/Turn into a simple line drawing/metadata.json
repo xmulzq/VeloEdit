@@ -1,0 +1,257 @@
+{
+  "model": "flux",
+  "image": "/mnt/bn/image-data-lf/zongqing/VeloEdit/assets/indoor.png",
+  "prompt": "Turn into a simple line drawing",
+  "strengths": [
+    0.0,
+    0.05,
+    0.1,
+    0.15,
+    0.2,
+    0.25,
+    0.3,
+    0.35,
+    0.4,
+    0.45,
+    0.5,
+    0.55,
+    0.6,
+    0.65,
+    0.7,
+    0.75,
+    0.8,
+    0.85,
+    0.9,
+    0.95,
+    1.0
+  ],
+  "seed": 42,
+  "steps": 30,
+  "preserve_steps": 1,
+  "edit_steps": 1,
+  "threshold": 0.8,
+  "similarity_mode": "elementwise",
+  "enable_interv": true,
+  "outputs": {
+    "0.00": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.00.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 22301,
+      "edit_interventions_applied": 239843,
+      "inference_time_sec": 45.933129717130214,
+      "velocity_intervention_time_sec": 0.014220223762094975,
+      "velocity_intervention_time_ratio": 0.0003095853439481985
+    },
+    "0.05": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.05.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 22301,
+      "edit_interventions_applied": 239843,
+      "inference_time_sec": 45.20301076024771,
+      "velocity_intervention_time_sec": 0.00742489704862237,
+      "velocity_intervention_time_ratio": 0.00016425669272348447
+    },
+    "0.10": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.10.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 22301,
+      "edit_interventions_applied": 239843,
+      "inference_time_sec": 45.155370206106454,
+      "velocity_intervention_time_sec": 0.006849851459264755,
+      "velocity_intervention_time_ratio": 0.00015169516777294487
+    },
+    "0.15": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.15.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 22301,
+      "edit_interventions_applied": 239843,
+      "inference_time_sec": 45.14712855312973,
+      "velocity_intervention_time_sec": 0.006993880495429039,
+      "velocity_intervention_time_ratio": 0.00015491307464213474
+    },
+    "0.20": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.20.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 22301,
+      "edit_interventions_applied": 239843,
+      "inference_time_sec": 45.18576360633597,
+      "velocity_intervention_time_sec": 0.005534689407795668,
+      "velocity_intervention_time_ratio": 0.00012248745990030345
+    },
+    "0.25": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.25.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 22301,
+      "edit_interventions_applied": 239843,
+      "inference_time_sec": 45.14629808394238,
+      "velocity_intervention_time_sec": 0.006203051190823317,
+      "velocity_intervention_time_ratio": 0.00013739888881453196
+    },
+    "0.30": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.30.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 22301,
+      "edit_interventions_applied": 239843,
+      "inference_time_sec": 45.145306365098804,
+      "velocity_intervention_time_sec": 0.006559072528034449,
+      "velocity_intervention_time_ratio": 0.0001452880278403687
+    },
+    "0.35": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.35.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 22301,
+      "edit_interventions_applied": 239843,
+      "inference_time_sec": 45.140485930256546,
+      "velocity_intervention_time_sec": 0.006484015844762325,
+      "velocity_intervention_time_ratio": 0.00014364080738475725
+    },
+    "0.40": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.40.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 22301,
+      "edit_interventions_applied": 239843,
+      "inference_time_sec": 45.14084081398323,
+      "velocity_intervention_time_sec": 0.006769675761461258,
+      "velocity_intervention_time_ratio": 0.00014996787032296976
+    },
+    "0.45": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.45.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 22301,
+      "edit_interventions_applied": 239843,
+      "inference_time_sec": 45.155313728842884,
+      "velocity_intervention_time_sec": 0.007658165879547596,
+      "velocity_intervention_time_ratio": 0.00016959611720416317
+    },
+    "0.50": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.50.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 22301,
+      "edit_interventions_applied": 239843,
+      "inference_time_sec": 45.182084986008704,
+      "velocity_intervention_time_sec": 0.007241436280310154,
+      "velocity_intervention_time_ratio": 0.0001602722911647962
+    },
+    "0.55": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.55.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 22301,
+      "edit_interventions_applied": 239843,
+      "inference_time_sec": 45.148763452190906,
+      "velocity_intervention_time_sec": 0.006757228169590235,
+      "velocity_intervention_time_ratio": 0.00014966585246007066
+    },
+    "0.60": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.60.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 22301,
+      "edit_interventions_applied": 239843,
+      "inference_time_sec": 45.14138660766184,
+      "velocity_intervention_time_sec": 0.006844010669738054,
+      "velocity_intervention_time_ratio": 0.0001516127700998981
+    },
+    "0.65": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.65.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 22301,
+      "edit_interventions_applied": 239843,
+      "inference_time_sec": 45.144304343964905,
+      "velocity_intervention_time_sec": 0.005664050113409758,
+      "velocity_intervention_time_ratio": 0.0001254654423347417
+    },
+    "0.70": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.70.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 22301,
+      "edit_interventions_applied": 239843,
+      "inference_time_sec": 45.15012066625059,
+      "velocity_intervention_time_sec": 0.00636464636772871,
+      "velocity_intervention_time_ratio": 0.00014096632021819248
+    },
+    "0.75": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.75.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 22301,
+      "edit_interventions_applied": 239843,
+      "inference_time_sec": 45.185854877810925,
+      "velocity_intervention_time_sec": 0.006712521892040968,
+      "velocity_intervention_time_ratio": 0.00014855361064192757
+    },
+    "0.80": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.80.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 22301,
+      "edit_interventions_applied": 239843,
+      "inference_time_sec": 45.143820508383214,
+      "velocity_intervention_time_sec": 0.0066115944646298885,
+      "velocity_intervention_time_ratio": 0.00014645624562064068
+    },
+    "0.85": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.85.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 22301,
+      "edit_interventions_applied": 239843,
+      "inference_time_sec": 45.15423419093713,
+      "velocity_intervention_time_sec": 0.006489263381808996,
+      "velocity_intervention_time_ratio": 0.00014371328620852683
+    },
+    "0.90": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.90.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 22301,
+      "edit_interventions_applied": 239843,
+      "inference_time_sec": 45.14888994721696,
+      "velocity_intervention_time_sec": 0.0062240841798484325,
+      "velocity_intervention_time_ratio": 0.00013785685954017778
+    },
+    "0.95": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.95.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 22301,
+      "edit_interventions_applied": 239843,
+      "inference_time_sec": 45.139203142840415,
+      "velocity_intervention_time_sec": 0.006677419878542423,
+      "velocity_intervention_time_ratio": 0.00014792950281847272
+    },
+    "1.00": {
+      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength1.00.png",
+      "num_steps": 24,
+      "interventions_applied": 262144,
+      "preserve_interventions_applied": 22301,
+      "edit_interventions_applied": 239843,
+      "inference_time_sec": 45.14156985701993,
+      "velocity_intervention_time_sec": 0.005892129614949226,
+      "velocity_intervention_time_ratio": 0.00013052558060368266
+    }
+  },
+  "compare_artifacts": [
+    "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/compare.png",
+    "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/compare.gif"
+  ],
+  "root_gif": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606.gif",
+  "timing_summary": {
+    "mean_inference_time_sec": 45.19204192120759,
+    "mean_velocity_intervention_time_sec": 0.006960757542401552,
+    "mean_velocity_intervention_time_ratio": 0.00015389748629833258
+  }
+}

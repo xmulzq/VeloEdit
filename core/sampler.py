@@ -4,11 +4,14 @@ from typing import Callable, Optional, List, Tuple
 from functools import partial
 import torch.distributed as dist
 import tqdm
+import time
 
 from .types import SamplingResult, InterventionConfig
 from .intervention import (
     compute_reference_velocity,
     compute_similarity,
+    normalize_similarity_mode,
+    prepare_gt_similarity_mask,
     apply_intervention,
     log_intervention_stats,
     log_intervention_summary,
@@ -23,13 +26,18 @@ def euler_step(
     sigma: float,
     sigma_next: float,
 ) -> Tuple[torch.Tensor, torch.Tensor]:
-    dt = sigma_next - sigma
+    """One deterministic Euler update for flow-matching style velocity prediction."""
+    sample = z.to(torch.float32)
+    model_output = v_pred.to(torch.float32)
+    current_sigma = torch.as_tensor(sigma, device=z.device, dtype=torch.float32)
+    next_sigma = torch.as_tensor(sigma_next, device=z.device, dtype=torch.float32)
+    dt = next_sigma - current_sigma
 
-    x0_pred = z - sigma * v_pred
+    x0_pred = sample - current_sigma * model_output
 
-    z_next = z + dt * v_pred
+    z_next = sample + dt * model_output
 
-    return z_next, x0_pred
+    return z_next.to(v_pred.dtype), x0_pred
 
 
 def _sigma_values(sigmas: torch.Tensor) -> List[float]:
@@ -56,19 +64,31 @@ def _should_log() -> bool:
     return not dist.is_initialized() or dist.get_rank() == 0
 
 
-def align_first_step_to_six_step(
+def _synchronize_if_cuda(device: torch.device) -> None:
+    if torch.cuda.is_available() and torch.device(device).type == "cuda":
+        torch.cuda.synchronize(device)
+
+
+def align_first_step_to_reference_step(
     sigma_schedule_n: torch.Tensor,
-    sigma_schedule_6: torch.Tensor,
+    sigma_schedule_reference: torch.Tensor,
+    reference_steps: int,
     atol: float = 1e-6,
 ) -> torch.Tensor:
+    """Force the first denoising delta to match a lower-step reference schedule."""
     requested_steps = len(sigma_schedule_n) - 1
-    if requested_steps <= 6 or len(sigma_schedule_n) < 2 or len(sigma_schedule_6) < 2:
+    if (
+        reference_steps <= 0
+        or requested_steps <= reference_steps
+        or len(sigma_schedule_n) < 2
+        or len(sigma_schedule_reference) < 2
+    ):
         return sigma_schedule_n
 
     sigma_n_float = sigma_schedule_n.detach().float()
-    sigma_6_float = sigma_schedule_6.detach().float()
-    delta6 = sigma_6_float[0] - sigma_6_float[1]
-    target_sigma1_float = sigma_n_float[0] - delta6
+    sigma_reference_float = sigma_schedule_reference.detach().float()
+    reference_delta = sigma_reference_float[0] - sigma_reference_float[1]
+    target_sigma1_float = sigma_n_float[0] - reference_delta
 
     start = sigma_n_float[0].item()
     end = sigma_n_float[-1].item()
@@ -88,6 +108,7 @@ def align_first_step_to_six_step(
         device=sigma_schedule_n.device,
         dtype=sigma_schedule_n.dtype,
     ).reshape(1)
+    # Keep the original start/end while replacing only the first transition.
     effective = torch.cat(
         [sigma_schedule_n[:1], target_sigma1, sigma_schedule_n[tail_mask]],
         dim=0,
@@ -101,20 +122,26 @@ def log_sampling_schedule(
     requested_steps: int,
     raw_sigma_schedule: torch.Tensor,
     effective_sigma_schedule: torch.Tensor,
-    sigma_schedule_6: Optional[torch.Tensor] = None,
+    reference_sigma_schedule: Optional[torch.Tensor] = None,
+    first_step_align_steps: Optional[int] = None,
 ) -> None:
     if not _should_log():
         return
 
     print(f"[Sigma Schedule][{model_name}] requested_steps={requested_steps}")
-    if sigma_schedule_6 is not None:
-        print(
-            f"[Sigma Schedule][{model_name}] 6-step raw sigmas: "
-            f"{format_sigma_schedule(sigma_schedule_6)}"
+    if reference_sigma_schedule is not None:
+        reference_label = (
+            first_step_align_steps
+            if first_step_align_steps is not None
+            else len(reference_sigma_schedule) - 1
         )
         print(
-            f"[Sigma Schedule][{model_name}] 6-step deltas: "
-            f"{format_sigma_deltas(sigma_schedule_6)}"
+            f"[Sigma Schedule][{model_name}] {reference_label}-step reference sigmas: "
+            f"{format_sigma_schedule(reference_sigma_schedule)}"
+        )
+        print(
+            f"[Sigma Schedule][{model_name}] {reference_label}-step reference deltas: "
+            f"{format_sigma_deltas(reference_sigma_schedule)}"
         )
     print(
         f"[Sigma Schedule][{model_name}] requested raw sigmas: "
@@ -150,6 +177,7 @@ def run_deterministic_sampling(
     reference_latent: Optional[torch.Tensor] = None,
     intervention_config: Optional[InterventionConfig] = None,
 ) -> SamplingResult:
+    """Run deterministic sampling and optionally intervene in the predicted velocity field."""
     dtype = z.dtype
     device = z.device
 
@@ -161,11 +189,15 @@ def run_deterministic_sampling(
 
     if intervention_config is None:
         intervention_config = InterventionConfig()
+    similarity_mode = normalize_similarity_mode(intervention_config.similarity_mode)
+    # Intervention needs a fixed reference latent; without it we still sample normally.
     enable_intervention = intervention_config.is_enabled() and reference_latent is not None
-    generate_mask = reference_latent is not None
+    generate_mask = enable_intervention
+    gt_similarity = None
 
     total_preserve = 0
     total_edit = 0
+    velocity_intervention_time_sec = 0.0
 
     num_steps = len(sigma_schedule) - 1
     preserve_steps = resolve_intervention_steps(
@@ -202,21 +234,55 @@ def run_deterministic_sampling(
         similarity = None
 
         if generate_mask:
+            _synchronize_if_cuda(v_pred.device)
+            intervention_start = time.perf_counter()
+            # The reference velocity is recomputed from the current latent so the mask
+            # always describes the current sampling state, not just the initial noise.
             v_ref = compute_reference_velocity(z, reference_latent, sigma_val)
             v_ref = v_ref.to(dtype)
 
-            similarity = compute_similarity(
-                v_pred,
-                v_ref,
-                mode=intervention_config.similarity_mode,
-            )
+            if similarity_mode == "gt":
+                if intervention_config.gt_mask is None:
+                    raise ValueError(
+                        "gt similarity mode requires gt_mask from benchmark mapping_file.json"
+                    )
+                if gt_similarity is None:
+                    if (
+                        intervention_config.gt_target_height is None
+                        or intervention_config.gt_target_width is None
+                    ):
+                        raise ValueError(
+                            "gt similarity mode requires target height/width from analyzer inputs"
+                        )
+                    gt_similarity = prepare_gt_similarity_mask(
+                        gt_mask=intervention_config.gt_mask,
+                        velocity_shape=tuple(v_pred.shape),
+                        target_height=intervention_config.gt_target_height,
+                        target_width=intervention_config.gt_target_width,
+                        vae_scale_factor=intervention_config.gt_vae_scale_factor,
+                        device=v_pred.device,
+                        dtype=torch.float32,
+                        gt_mask_size=intervention_config.gt_mask_size,
+                    )
+                # GT masks are spatial and step-invariant, so reuse the resized tensor.
+                similarity = gt_similarity
+            else:
+                similarity = compute_similarity(
+                    v_pred,
+                    v_ref,
+                    mode=similarity_mode,
+                )
             step_mask = (similarity < intervention_config.similarity_threshold).float()
+            _synchronize_if_cuda(v_pred.device)
+            velocity_intervention_time_sec += time.perf_counter() - intervention_start
             similarity_masks.append(step_mask.detach().clone().cpu())
 
         preserve_active = enable_intervention and i < preserve_steps
         edit_active = enable_intervention and i < edit_steps
 
         if (preserve_active or edit_active) and v_ref is not None:
+            _synchronize_if_cuda(v_pred.device)
+            intervention_start = time.perf_counter()
             v_pred, _, preserve_count, edit_count = apply_intervention(
                 v_pred,
                 v_ref,
@@ -225,6 +291,8 @@ def run_deterministic_sampling(
                 edit_active=edit_active,
                 similarity=similarity,
             )
+            _synchronize_if_cuda(v_pred.device)
+            velocity_intervention_time_sec += time.perf_counter() - intervention_start
 
             num_elements = v_pred.numel()
             total_preserve += preserve_count
@@ -238,10 +306,12 @@ def run_deterministic_sampling(
                 preserve_count=preserve_count,
                 edit_count=edit_count,
                 total_elements=num_elements,
-                similarity_mode=intervention_config.similarity_mode,
+                similarity_mode=similarity_mode,
                 blend_weight=intervention_config.blend_weight,
             )
 
+        # Store CPU copies for downstream decomposition/visualization without
+        # keeping the full trajectory resident on GPU.
         all_velocities.append(v_pred.detach().clone().cpu())
 
         z, x0_pred = euler_step(z, v_pred, sigma_val, sigma_next_val)
@@ -268,6 +338,7 @@ def run_deterministic_sampling(
         interventions_applied=total_preserve + total_edit,
         preserve_interventions_applied=total_preserve,
         edit_interventions_applied=total_edit,
+        velocity_intervention_time_sec=velocity_intervention_time_sec,
     )
 
 

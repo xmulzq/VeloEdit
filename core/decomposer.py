@@ -7,6 +7,7 @@ from .types import VelocityDecomposition
 
 
 class VelocityDecomposer:
+    """Project predicted velocities onto the reference direction and its residual."""
 
     def __init__(self, eps: float = 1e-8, save_tensors: bool = False):
         self.eps = eps
@@ -27,6 +28,7 @@ class VelocityDecomposer:
         v_flat = velocity.flatten(1)
         v_ref_flat = reference_velocity.flatten(1)
 
+        # The preserve component is the projection of v onto the reference velocity.
         v_ref_norm = torch.norm(v_ref_flat, dim=1, keepdim=True)
         v_ref_normalized = v_ref_flat / (v_ref_norm + self.eps)
 
@@ -46,6 +48,7 @@ class VelocityDecomposer:
         preserve_energy = (preserve_flat ** 2).sum(dim=1).mean().item()
         edit_energy = (edit_flat ** 2).sum(dim=1).mean().item()
 
+        # Ratios use squared norm energy, making preserve/edit comparable across scales.
         preserve_ratio = preserve_energy / (total_energy + self.eps)
         edit_ratio = edit_energy / (total_energy + self.eps)
 
@@ -91,6 +94,7 @@ class VelocityDecomposer:
             current_latent = current_latent.to(device)
             ref_latent = reference_latent.to(device)
 
+            # Reconstruct the ideal velocity from the current latent toward the fixed reference.
             reference_velocity = (current_latent - ref_latent) / (sigma + self.eps)
 
             result = self.decompose(

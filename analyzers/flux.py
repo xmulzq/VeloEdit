@@ -12,10 +12,11 @@ from diffusers.pipelines.flux.pipeline_flux_kontext import (
 )
 
 from .base import BaseVelocityAnalyzer
-from ..core.sampler import align_first_step_to_six_step, log_sampling_schedule
+from ..core.sampler import align_first_step_to_reference_step, log_sampling_schedule
 
 
 class FLUXVelocityAnalyzer(BaseVelocityAnalyzer):
+    """FLUX.1-Kontext adapter that exposes transformer velocity predictions."""
 
     def __init__(
         self,
@@ -54,7 +55,6 @@ class FLUXVelocityAnalyzer(BaseVelocityAnalyzer):
         if self.lora_path:
             self._load_lora(self.lora_path)
 
-        self.pipeline.vae.to(dtype=torch.float32)
         print("[FLUX] Model loaded successfully.")
 
     def _load_lora(self, lora_path: str) -> None:
@@ -65,6 +65,7 @@ class FLUXVelocityAnalyzer(BaseVelocityAnalyzer):
             self.pipeline.load_lora_weights(lora_path)
         elif os.path.isdir(lora_path):
             print(f"[LoRA] Loading PEFT directory: {lora_path}")
+            # PEFT directories wrap the transformer module instead of using diffusers loaders.
             from peft import PeftModel
             self.pipeline.transformer = PeftModel.from_pretrained(
                 self.pipeline.transformer, lora_path
@@ -88,6 +89,11 @@ class FLUXVelocityAnalyzer(BaseVelocityAnalyzer):
         max_area = 1024 ** 2
 
         current_area = height * width
+
+        # if current_area > max_area:
+        #     scale = (max_area / current_area) ** 0.5
+        #     width = round(width * scale)
+        #     height = round(height * scale)
         # Match the Kontext/Qwen benchmark path: run sampling near the 1024^2
         # training resolution, then resize outputs back to the original size.
         scale = (max_area / current_area) ** 0.5
@@ -124,9 +130,11 @@ class FLUXVelocityAnalyzer(BaseVelocityAnalyzer):
         )
 
         num_channels_latents = self.pipeline.transformer.config.in_channels // 4
-        processed_image = processed_image.to(device=device, dtype=torch.float32)
+        processed_image = processed_image.to(device=device, dtype=prompt_embeds.dtype)
 
-        generator = torch.Generator(device=device).manual_seed(seed)
+        # Match diffusers examples/tests that pass torch.manual_seed(seed), which
+        # is a CPU generator and produces different latents from a CUDA generator.
+        generator = torch.Generator(device="cpu").manual_seed(seed)
         print(f"[Seed] Using random seed: {seed}")
 
         with torch.no_grad():
@@ -136,13 +144,14 @@ class FLUXVelocityAnalyzer(BaseVelocityAnalyzer):
                 num_channels_latents,
                 height,
                 width,
-                torch.float32,
+                prompt_embeds.dtype,
                 device,
                 generator,
                 None,
             )
 
         if image_ids is not None:
+            # Kontext attends over generated tokens followed by condition-image tokens.
             latent_ids = torch.cat([latent_ids, image_ids], dim=0)
 
         transformer_dtype = self.pipeline.transformer.dtype
@@ -150,6 +159,7 @@ class FLUXVelocityAnalyzer(BaseVelocityAnalyzer):
         if image_latents is not None:
             image_latents = image_latents.to(dtype=transformer_dtype)
 
+        # The condition image latent is the fixed reference used by velocity intervention.
         reference_latent = image_latents.clone() if image_latents is not None else latents.clone()
 
         requested_num_inference_steps = num_inference_steps
@@ -170,30 +180,44 @@ class FLUXVelocityAnalyzer(BaseVelocityAnalyzer):
             mu=mu,
         )
         raw_sigma_schedule = self.pipeline.scheduler.sigmas.float().clone()
-        sigma_schedule_6 = None
+        first_step_align_steps = int(
+            getattr(self.config.sampling, "first_step_align_steps", 6)
+        )
+        reference_sigma_schedule = None
         sigma_schedule = raw_sigma_schedule
 
-        if requested_num_inference_steps > 6:
-            sigmas_6 = np.linspace(1.0, 1 / 6, 6)
+        if (
+            first_step_align_steps > 0
+            and requested_num_inference_steps > first_step_align_steps
+        ):
+            reference_sigmas = np.linspace(
+                1.0,
+                1 / first_step_align_steps,
+                first_step_align_steps,
+            )
             retrieve_timesteps(
                 self.pipeline.scheduler,
-                6,
+                first_step_align_steps,
                 device,
-                sigmas=sigmas_6,
+                sigmas=reference_sigmas,
                 mu=mu,
             )
-            sigma_schedule_6 = self.pipeline.scheduler.sigmas.float().clone()
-            sigma_schedule = align_first_step_to_six_step(
+            reference_sigma_schedule = self.pipeline.scheduler.sigmas.float().clone()
+            sigma_schedule = align_first_step_to_reference_step(
                 raw_sigma_schedule,
-                sigma_schedule_6,
+                reference_sigma_schedule,
+                first_step_align_steps,
             )
 
+        # Log both requested and effective schedules because first-step alignment can
+        # change the actual number of Euler transitions.
         log_sampling_schedule(
             "FLUX",
             requested_num_inference_steps,
             raw_sigma_schedule,
             sigma_schedule,
-            sigma_schedule_6,
+            reference_sigma_schedule,
+            first_step_align_steps,
         )
 
         guidance_scale = self.config.sampling.guidance_scale
@@ -205,12 +229,19 @@ class FLUXVelocityAnalyzer(BaseVelocityAnalyzer):
             guidance = None
 
         def v_pred_fn(z, sigma):
+            # The sampler owns z, while the condition image latent stays fixed per prompt.
             latent_model_input = z
             if image_latents is not None:
                 latent_model_input = torch.cat([z, image_latents], dim=1)
 
-            timesteps_input = torch.full(
-                [latent_model_input.shape[0]], sigma, device=z.device, dtype=torch.float32
+            train_timesteps = self.pipeline.scheduler.config.get("num_train_timesteps", 1000)
+            sigma_tensor = torch.as_tensor(sigma, device=z.device, dtype=torch.float32)
+            # FLUX transformer expects normalized training timesteps, not raw sigma values.
+            timesteps_input = (
+                (sigma_tensor * train_timesteps)
+                .expand(latent_model_input.shape[0])
+                .to(dtype=z.dtype)
+                / train_timesteps
             )
             noise_pred = self.pipeline.transformer(
                 hidden_states=latent_model_input,
@@ -220,9 +251,10 @@ class FLUXVelocityAnalyzer(BaseVelocityAnalyzer):
                 encoder_hidden_states=prompt_embeds,
                 txt_ids=text_ids,
                 img_ids=latent_ids,
-                joint_attention_kwargs=None,
+                joint_attention_kwargs={},
                 return_dict=False,
             )[0]
+            # Drop condition-image predictions; intervention only edits generated tokens.
             noise_pred = noise_pred[:, : latents.size(1)]
             return noise_pred
 
@@ -246,6 +278,7 @@ class FLUXVelocityAnalyzer(BaseVelocityAnalyzer):
     ) -> Image.Image:
         latents = latents.to(device=self.device, dtype=self.pipeline.transformer.dtype)
 
+        # FLUX stores generated latents as packed tokens before VAE unpacking.
         unpacked = self.pipeline._unpack_latents(
             latents, height, width, self.pipeline.vae_scale_factor
         )

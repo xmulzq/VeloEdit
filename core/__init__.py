@@ -9,7 +9,7 @@ from .sampler import (
     euler_step,
     run_deterministic_sampling,
     create_sigma_schedule,
-    align_first_step_to_six_step,
+    align_first_step_to_reference_step,
     log_sampling_schedule,
 )
 from .intervention import (
@@ -29,7 +29,7 @@ __all__ = [
     "euler_step",
     "run_deterministic_sampling",
     "create_sigma_schedule",
-    "align_first_step_to_six_step",
+    "align_first_step_to_reference_step",
     "log_sampling_schedule",
     "compute_reference_velocity",
     "compute_element_similarity",

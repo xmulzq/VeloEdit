@@ -39,6 +39,7 @@ app.config["MAX_CONTENT_LENGTH"] = SERVER_CONFIG["max_content_length"]
 loaded_analyzers: Dict[str, AnalyzerWrapper] = {}
 
 def decode_image(data: str) -> Image.Image:
+    # Accept both raw base64 strings and data URLs from the browser.
     if "," in data:
         data = data.split(",", 1)[1]
     return Image.open(io.BytesIO(base64.b64decode(data)))
@@ -113,6 +114,7 @@ def save_images_to_disk(
             img.save(filepath)
             saved_paths.append(str(filepath))
 
+        # Compare artifacts make strength sweeps easy to inspect outside the web UI.
         compare_paths = save_compare_artifacts(images, subfolder)
         saved_paths.extend(compare_paths)
         print(f"Saved {len(images)} images to: {subfolder}")
@@ -140,6 +142,7 @@ def get_models():
     frontend_loaded = []
     for model in loaded:
         if model == "qwen_single":
+            # The frontend exposes one Qwen option regardless of single/multi-GPU loading.
             frontend_loaded.append("qwen")
         else:
             frontend_loaded.append(model)
@@ -226,6 +229,7 @@ def analyze():
         actual_model_type = model_type
         if model_type == "qwen" and model_type not in loaded_analyzers:
             if "qwen_single" in loaded_analyzers:
+                # Allow a qwen_single backend to satisfy regular frontend Qwen requests.
                 actual_model_type = "qwen_single"
             else:
                 return jsonify({

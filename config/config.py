@@ -11,8 +11,10 @@ def flux_config() -> ConfigDict:
     config.model.dtype = "bfloat16"
 
     config.sampling = ConfigDict()
-    config.sampling.num_inference_steps = 6
+    config.sampling.num_inference_steps = 30
     config.sampling.guidance_scale = 2.5
+    # Match the first denoising delta to a short reference schedule for benchmark parity.
+    config.sampling.first_step_align_steps = 4
 
     config.output = ConfigDict()
     config.output.output_dir = "./velocity_output"
@@ -30,9 +32,11 @@ def qwen_config() -> ConfigDict:
     config.model.dtype = "bfloat16"
 
     config.sampling = ConfigDict()
-    config.sampling.num_inference_steps = 6
+    config.sampling.num_inference_steps = 28
     config.sampling.guidance_scale = 1.0
     config.sampling.true_cfg_scale = 4.0
+    # Qwen is especially sensitive to the first step, so keep this enabled by default.
+    config.sampling.first_step_align_steps = 6
 
     config.output = ConfigDict()
     config.output.output_dir = "./velocity_output"
