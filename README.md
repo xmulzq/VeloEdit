@@ -4,7 +4,7 @@ VeloEdit is a tool for analyzing and intervening in the velocity field of diffus
 
 ## Results Visualization
 
-|![Add flowers to the helmet](results/flux/Add flowers to the dog's mouth.gif)|![Turn the horse into a bronze horse](results/flux/Turn%20the%20horse%20into%20a%20bronze%20horse.gif)|![Turn into a simple line drawing](results/flux/Turn%20into%20a%20simple%20line%20drawing.gif)|
+|![Add flowers to the helmet](results/flux/Add%20flowers%20to%20the%20dog's%20mouth.gif)|![Turn the horse into a bronze horse](results/flux/Turn%20the%20horse%20into%20a%20bronze%20horse.gif)|![Turn into a simple line drawing](results/flux/Turn%20into%20a%20simple%20line%20drawing.gif)|
 |:--:|:--:|:--:|
 |***Add flowers to the helmet***|***Turn the horse into a bronze horse***|***Turn into a simple line drawing***|
 
