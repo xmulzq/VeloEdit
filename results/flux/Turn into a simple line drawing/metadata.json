@@ -1,6 +1,6 @@
 {
   "model": "flux",
-  "image": "/mnt/bn/image-data-lf/zongqing/VeloEdit/assets/indoor.png",
+  "image": "/assets/indoor.png",
   "prompt": "Turn into a simple line drawing",
   "strengths": [
     0.0,
@@ -34,7 +34,7 @@
   "enable_interv": true,
   "outputs": {
     "0.00": {
-      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.00.png",
+      "path": "/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.00.png",
       "num_steps": 24,
       "interventions_applied": 262144,
       "preserve_interventions_applied": 22301,
@@ -44,7 +44,7 @@
       "velocity_intervention_time_ratio": 0.0003095853439481985
     },
     "0.05": {
-      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.05.png",
+      "path": "/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.05.png",
       "num_steps": 24,
       "interventions_applied": 262144,
       "preserve_interventions_applied": 22301,
@@ -54,7 +54,7 @@
       "velocity_intervention_time_ratio": 0.00016425669272348447
     },
     "0.10": {
-      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.10.png",
+      "path": "/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.10.png",
       "num_steps": 24,
       "interventions_applied": 262144,
       "preserve_interventions_applied": 22301,
@@ -64,7 +64,7 @@
       "velocity_intervention_time_ratio": 0.00015169516777294487
     },
     "0.15": {
-      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.15.png",
+      "path": "/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.15.png",
       "num_steps": 24,
       "interventions_applied": 262144,
       "preserve_interventions_applied": 22301,
@@ -74,7 +74,7 @@
       "velocity_intervention_time_ratio": 0.00015491307464213474
     },
     "0.20": {
-      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.20.png",
+      "path": "/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.20.png",
       "num_steps": 24,
       "interventions_applied": 262144,
       "preserve_interventions_applied": 22301,
@@ -84,7 +84,7 @@
       "velocity_intervention_time_ratio": 0.00012248745990030345
     },
     "0.25": {
-      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.25.png",
+      "path": "/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.25.png",
       "num_steps": 24,
       "interventions_applied": 262144,
       "preserve_interventions_applied": 22301,
@@ -94,7 +94,7 @@
       "velocity_intervention_time_ratio": 0.00013739888881453196
     },
     "0.30": {
-      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.30.png",
+      "path": "/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.30.png",
       "num_steps": 24,
       "interventions_applied": 262144,
       "preserve_interventions_applied": 22301,
@@ -104,7 +104,7 @@
       "velocity_intervention_time_ratio": 0.0001452880278403687
     },
     "0.35": {
-      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.35.png",
+      "path": "/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.35.png",
       "num_steps": 24,
       "interventions_applied": 262144,
       "preserve_interventions_applied": 22301,
@@ -114,7 +114,7 @@
       "velocity_intervention_time_ratio": 0.00014364080738475725
     },
     "0.40": {
-      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.40.png",
+      "path": "/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.40.png",
       "num_steps": 24,
       "interventions_applied": 262144,
       "preserve_interventions_applied": 22301,
@@ -124,7 +124,7 @@
       "velocity_intervention_time_ratio": 0.00014996787032296976
     },
     "0.45": {
-      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.45.png",
+      "path": "/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.45.png",
       "num_steps": 24,
       "interventions_applied": 262144,
       "preserve_interventions_applied": 22301,
@@ -134,7 +134,7 @@
       "velocity_intervention_time_ratio": 0.00016959611720416317
     },
     "0.50": {
-      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.50.png",
+      "path": "/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.50.png",
       "num_steps": 24,
       "interventions_applied": 262144,
       "preserve_interventions_applied": 22301,
@@ -144,7 +144,7 @@
       "velocity_intervention_time_ratio": 0.0001602722911647962
     },
     "0.55": {
-      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.55.png",
+      "path": "/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.55.png",
       "num_steps": 24,
       "interventions_applied": 262144,
       "preserve_interventions_applied": 22301,
@@ -154,7 +154,7 @@
       "velocity_intervention_time_ratio": 0.00014966585246007066
     },
     "0.60": {
-      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.60.png",
+      "path": "/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.60.png",
       "num_steps": 24,
       "interventions_applied": 262144,
       "preserve_interventions_applied": 22301,
@@ -164,7 +164,7 @@
       "velocity_intervention_time_ratio": 0.0001516127700998981
     },
     "0.65": {
-      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.65.png",
+      "path": "/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.65.png",
       "num_steps": 24,
       "interventions_applied": 262144,
       "preserve_interventions_applied": 22301,
@@ -174,7 +174,7 @@
       "velocity_intervention_time_ratio": 0.0001254654423347417
     },
     "0.70": {
-      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.70.png",
+      "path": "/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.70.png",
       "num_steps": 24,
       "interventions_applied": 262144,
       "preserve_interventions_applied": 22301,
@@ -184,7 +184,7 @@
       "velocity_intervention_time_ratio": 0.00014096632021819248
     },
     "0.75": {
-      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.75.png",
+      "path": "/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.75.png",
       "num_steps": 24,
       "interventions_applied": 262144,
       "preserve_interventions_applied": 22301,
@@ -194,7 +194,7 @@
       "velocity_intervention_time_ratio": 0.00014855361064192757
     },
     "0.80": {
-      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.80.png",
+      "path": "/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.80.png",
       "num_steps": 24,
       "interventions_applied": 262144,
       "preserve_interventions_applied": 22301,
@@ -204,7 +204,7 @@
       "velocity_intervention_time_ratio": 0.00014645624562064068
     },
     "0.85": {
-      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.85.png",
+      "path": "/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.85.png",
       "num_steps": 24,
       "interventions_applied": 262144,
       "preserve_interventions_applied": 22301,
@@ -214,7 +214,7 @@
       "velocity_intervention_time_ratio": 0.00014371328620852683
     },
     "0.90": {
-      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.90.png",
+      "path": "/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.90.png",
       "num_steps": 24,
       "interventions_applied": 262144,
       "preserve_interventions_applied": 22301,
@@ -224,7 +224,7 @@
       "velocity_intervention_time_ratio": 0.00013785685954017778
     },
     "0.95": {
-      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.95.png",
+      "path": "/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength0.95.png",
       "num_steps": 24,
       "interventions_applied": 262144,
       "preserve_interventions_applied": 22301,
@@ -234,7 +234,7 @@
       "velocity_intervention_time_ratio": 0.00014792950281847272
     },
     "1.00": {
-      "path": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength1.00.png",
+      "path": "/results/flux/Turn into a simple line drawing_20260728_145606/Turn into a simple line drawing_strength1.00.png",
       "num_steps": 24,
       "interventions_applied": 262144,
       "preserve_interventions_applied": 22301,
@@ -245,10 +245,10 @@
     }
   },
   "compare_artifacts": [
-    "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/compare.png",
-    "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606/compare.gif"
+    "/results/flux/Turn into a simple line drawing_20260728_145606/compare.png",
+    "/results/flux/Turn into a simple line drawing_20260728_145606/compare.gif"
   ],
-  "root_gif": "/mnt/bn/image-data-lf/zongqing/VeloEdit/results/flux/Turn into a simple line drawing_20260728_145606.gif",
+  "root_gif": "/results/flux/Turn into a simple line drawing_20260728_145606.gif",
   "timing_summary": {
     "mean_inference_time_sec": 45.19204192120759,
     "mean_velocity_intervention_time_sec": 0.006960757542401552,
